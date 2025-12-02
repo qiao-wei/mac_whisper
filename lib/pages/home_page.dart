@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:ui' as ui;
 import '../models/project.dart';
+import '../services/database_service.dart';
 import 'editor_page.dart';
 import 'subtitle_editor_page.dart';
 
@@ -46,15 +47,38 @@ class _HomePageState extends State<HomePage> {
   bool _isRightPanelOpen = true;
   String _searchQuery = '';
   String? _selectedProjectId;
+  final _db = DatabaseService();
+  List<Project> _projects = [];
+  bool _isLoading = true;
 
-  final List<Project> _projects = [
-    Project(id: '1', name: 'My Vacation Video.mp4', status: ProjectStatus.completed, createdAt: DateTime.now()),
-    Project(id: '2', name: 'Podcast Interview Ep5.mp3', status: ProjectStatus.inProgress, createdAt: DateTime.now().subtract(const Duration(days: 1))),
-    Project(id: '3', name: 'Product Demo.mov', status: ProjectStatus.inProgress, createdAt: DateTime.now().subtract(const Duration(days: 5))),
-    Project(id: '4', name: 'Team Meeting Recording.wav', status: ProjectStatus.inProgress, createdAt: DateTime.now().subtract(const Duration(days: 6))),
-    Project(id: '5', name: 'Q3 Financial Review.mp4', status: ProjectStatus.completed, createdAt: DateTime.now().subtract(const Duration(days: 10))),
-    Project(id: '6', name: 'Marketing Campaign V2.mov', status: ProjectStatus.inProgress, createdAt: DateTime.now().subtract(const Duration(days: 15))),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadProjects();
+  }
+
+  Future<void> _loadProjects() async {
+    final projects = await _db.getProjects();
+    if (projects.isEmpty) {
+      // Insert sample data on first run
+      final samples = [
+        Project(id: '1', name: 'My Vacation Video.mp4', status: ProjectStatus.completed, createdAt: DateTime.now()),
+        Project(id: '2', name: 'Podcast Interview Ep5.mp3', status: ProjectStatus.inProgress, createdAt: DateTime.now().subtract(const Duration(days: 1))),
+        Project(id: '3', name: 'Product Demo.mov', status: ProjectStatus.inProgress, createdAt: DateTime.now().subtract(const Duration(days: 5))),
+      ];
+      for (final p in samples) {
+        await _db.insertProject(p);
+      }
+      setState(() { _projects = samples; _isLoading = false; });
+    } else {
+      setState(() { _projects = projects; _isLoading = false; });
+    }
+  }
+
+  Future<void> _updateProject(Project p) async {
+    await _db.updateProject(p);
+    setState(() {});
+  }
 
   List<Project> get _filteredProjects {
     return _projects.where((p) {
@@ -253,8 +277,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openSubtitleEditor({String? projectName}) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => SubtitleEditorPage(projectName: projectName)));
+  void _openSubtitleEditor({String? projectId, String? projectName}) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => SubtitleEditorPage(projectId: projectId, projectName: projectName)));
   }
 
   Widget _buildProjectItem(Project project) {
@@ -262,8 +286,15 @@ class _HomePageState extends State<HomePage> {
       project: project,
       isSelected: _selectedProjectId == project.id,
       onTap: () => setState(() => _selectedProjectId = _selectedProjectId == project.id ? null : project.id),
-      onDoubleTap: () => _openSubtitleEditor(projectName: project.name),
-      onStatusToggle: () => setState(() => project.status = project.status == ProjectStatus.completed ? ProjectStatus.inProgress : ProjectStatus.completed),
+      onDoubleTap: () => _openSubtitleEditor(projectId: project.id, projectName: project.name),
+      onStatusToggle: () {
+        project.status = project.status == ProjectStatus.completed ? ProjectStatus.inProgress : ProjectStatus.completed;
+        _updateProject(project);
+      },
+      onNameChanged: (name) {
+        project.name = name;
+        _updateProject(project);
+      },
     );
   }
 
@@ -352,7 +383,8 @@ class _ProjectItemWidget extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback onDoubleTap;
   final VoidCallback onStatusToggle;
-  const _ProjectItemWidget({required this.project, required this.isSelected, required this.onTap, required this.onDoubleTap, required this.onStatusToggle});
+  final Function(String) onNameChanged;
+  const _ProjectItemWidget({required this.project, required this.isSelected, required this.onTap, required this.onDoubleTap, required this.onStatusToggle, required this.onNameChanged});
   @override
   State<_ProjectItemWidget> createState() => _ProjectItemWidgetState();
 }
@@ -415,8 +447,8 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
                               autofocus: true,
                               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                               decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4), border: OutlineInputBorder()),
-                              onSubmitted: (_) => setState(() => _isEditingName = false),
-                              onTapOutside: (_) => setState(() => _isEditingName = false),
+                              onSubmitted: (_) { widget.onNameChanged(_nameController.text); setState(() => _isEditingName = false); },
+                              onTapOutside: (_) { widget.onNameChanged(_nameController.text); setState(() => _isEditingName = false); },
                             ),
                           )
                         : GestureDetector(

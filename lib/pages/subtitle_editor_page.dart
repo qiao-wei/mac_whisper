@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../services/database_service.dart';
 
 class SubtitleItem {
+  int? dbId;
   int id;
   String startTime;
   String endTime;
@@ -9,6 +11,7 @@ class SubtitleItem {
   bool selected;
 
   SubtitleItem({
+    this.dbId,
     required this.id,
     required this.startTime,
     required this.endTime,
@@ -21,8 +24,9 @@ class SubtitleItem {
 class SubtitleEditorPage extends StatefulWidget {
   final String? videoPath;
   final String? projectName;
+  final String? projectId;
 
-  const SubtitleEditorPage({super.key, this.videoPath, this.projectName});
+  const SubtitleEditorPage({super.key, this.videoPath, this.projectName, this.projectId});
 
   @override
   State<SubtitleEditorPage> createState() => _SubtitleEditorPageState();
@@ -35,14 +39,54 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   String? _editingField;
   final _editController = TextEditingController();
   final _focusNode = FocusNode();
+  final _db = DatabaseService();
 
-  List<SubtitleItem> _subtitles = [
-    SubtitleItem(id: 1, startTime: '00:00:15,250', endTime: '00:00:18,100', text: 'This is the first line of the subtitle.', translatedText: 'Esta es la primera línea del subtítulo.'),
-    SubtitleItem(id: 2, startTime: '00:00:18,500', endTime: '00:00:21,300', text: 'And this is the\nsecond line example.', translatedText: 'Y esta es la segunda línea,\ndemostrando el contenido.', selected: true),
-    SubtitleItem(id: 3, startTime: '00:00:22,000', endTime: '00:00:25,150', text: 'Each row represents a single subtitle segment.', translatedText: 'Cada fila representa un único segmento de subtítulo.'),
-    SubtitleItem(id: 4, startTime: '00:00:26,000', endTime: '00:00:28,900', text: 'Users can edit the text and timing directly in this list.', translatedText: 'Los usuarios pueden editar el texto y la sincronización directamente en esta lista.'),
-    SubtitleItem(id: 5, startTime: '00:00:30,100', endTime: '00:00:33,500', text: 'More subtitle content can be scrolled through.', translatedText: 'Se puede desplazar por más contenido de subtítulos.'),
-  ];
+  List<SubtitleItem> _subtitles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSubtitles();
+  }
+
+  Future<void> _loadSubtitles() async {
+    if (widget.projectId != null) {
+      final data = await _db.getSubtitles(widget.projectId!);
+      if (data.isNotEmpty) {
+        setState(() {
+          _subtitles = data.asMap().entries.map((e) => SubtitleItem(
+            dbId: e.value['id'] as int,
+            id: e.key + 1,
+            startTime: _formatMsToTime(e.value['start_time'] as int),
+            endTime: _formatMsToTime(e.value['end_time'] as int),
+            text: e.value['text'] as String,
+            translatedText: e.value['translated_text'] as String? ?? '',
+            selected: e.key == 0,
+          )).toList();
+        });
+        return;
+      }
+    }
+    // Default sample data
+    setState(() {
+      _subtitles = [
+        SubtitleItem(id: 1, startTime: '00:00:15,250', endTime: '00:00:18,100', text: 'This is the first line of the subtitle.', translatedText: 'Esta es la primera línea del subtítulo.'),
+        SubtitleItem(id: 2, startTime: '00:00:18,500', endTime: '00:00:21,300', text: 'And this is the\nsecond line example.', translatedText: 'Y esta es la segunda línea,\ndemostrando el contenido.', selected: true),
+        SubtitleItem(id: 3, startTime: '00:00:22,000', endTime: '00:00:25,150', text: 'Each row represents a single subtitle segment.', translatedText: 'Cada fila representa un único segmento de subtítulo.'),
+      ];
+    });
+  }
+
+  Future<void> _saveSubtitles() async {
+    if (widget.projectId == null) return;
+    final data = _subtitles.map((s) => {
+      'start_time': _parseTimeToMs(s.startTime),
+      'end_time': _parseTimeToMs(s.endTime),
+      'text': s.text,
+      'translated_text': s.translatedText,
+    }).toList();
+    await _db.saveSubtitles(widget.projectId!, data);
+  }
 
   SubtitleItem? get _activeSubtitle => _subtitles.where((s) => s.selected).firstOrNull;
   int get _selectedCount => _subtitles.where((s) => s.selected).length;
@@ -118,6 +162,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         _subtitles[i].id = i + 1;
       }
     });
+    _saveSubtitles();
   }
 
   void _handleSplit() {
@@ -136,6 +181,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         _subtitles[i].id = i + 1;
       }
     });
+    _saveSubtitles();
   }
 
   void _startEditing(int id, String field) {
@@ -173,6 +219,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
             case 'translatedText': _subtitles[idx].translatedText = _editController.text; break;
           }
         });
+        _saveSubtitles();
       }
     }
     setState(() {
@@ -188,6 +235,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         _subtitles[i].id = i + 1;
       }
     });
+    _saveSubtitles();
   }
 
   @override
