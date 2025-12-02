@@ -45,6 +45,7 @@ class _HomePageState extends State<HomePage> {
   String _activeTab = 'All Projects';
   bool _isRightPanelOpen = true;
   String _searchQuery = '';
+  String? _selectedProjectId;
 
   final List<Project> _projects = [
     Project(id: '1', name: 'My Vacation Video.mp4', status: ProjectStatus.completed, createdAt: DateTime.now()),
@@ -257,56 +258,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildProjectItem(Project project) {
-    final isVideo = project.name.endsWith('.mp4') || project.name.endsWith('.mov');
-    final statusColor = project.status == ProjectStatus.completed ? Colors.green : Colors.orange;
-    final statusText = project.status == ProjectStatus.completed ? 'Completed' : 'Editing';
-
-    return GestureDetector(
+    return _ProjectItemWidget(
+      project: project,
+      isSelected: _selectedProjectId == project.id,
+      onTap: () => setState(() => _selectedProjectId = _selectedProjectId == project.id ? null : project.id),
       onDoubleTap: () => _openSubtitleEditor(projectName: project.name),
-      child: Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF13161F), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.transparent)),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.grey.shade800.withOpacity(0.5), borderRadius: BorderRadius.circular(8)),
-            child: Icon(isVideo ? Icons.movie : Icons.music_note, color: isVideo ? Colors.blue : Colors.purple, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(project.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                const Text('Size: 45MB • Duration: 12:30', style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: statusColor.withOpacity(0.2))),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
-                    const SizedBox(width: 6),
-                    Text(statusText, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text('${project.createdAt.month}/${project.createdAt.day}/${project.createdAt.year}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-            ],
-          ),
-        ],
-      ),
-    ),
     );
   }
 
@@ -384,6 +340,114 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProjectItemWidget extends StatefulWidget {
+  final Project project;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final VoidCallback onDoubleTap;
+  const _ProjectItemWidget({required this.project, required this.isSelected, required this.onTap, required this.onDoubleTap});
+  @override
+  State<_ProjectItemWidget> createState() => _ProjectItemWidgetState();
+}
+
+class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
+  bool _isHovered = false;
+  bool _isEditingName = false;
+  late TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.project.name);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final project = widget.project;
+    final isVideo = project.name.endsWith('.mp4') || project.name.endsWith('.mov');
+    final statusColor = project.status == ProjectStatus.completed ? Colors.green : Colors.orange;
+    final statusText = project.status == ProjectStatus.completed ? 'Completed' : 'Editing';
+
+    return GestureDetector(
+      onDoubleTap: widget.onDoubleTap,
+      onTap: widget.onTap,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: widget.isSelected ? const Color(0xFF1A1E29) : const Color(0xFF13161F),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: widget.isSelected ? Colors.blue : (_isHovered ? Colors.grey.shade700 : Colors.transparent)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: Colors.grey.shade800.withOpacity(0.5), borderRadius: BorderRadius.circular(8)),
+                child: Icon(isVideo ? Icons.movie : Icons.music_note, color: isVideo ? Colors.blue : Colors.purple, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _isEditingName
+                        ? SizedBox(
+                            height: 24,
+                            child: TextField(
+                              controller: _nameController,
+                              autofocus: true,
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                              decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4), border: OutlineInputBorder()),
+                              onSubmitted: (_) => setState(() => _isEditingName = false),
+                              onTapOutside: (_) => setState(() => _isEditingName = false),
+                            ),
+                          )
+                        : GestureDetector(
+                            onDoubleTap: () => setState(() => _isEditingName = true),
+                            child: Text(_nameController.text, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                    const SizedBox(height: 4),
+                    const Text('Size: 45MB • Duration: 12:30', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: statusColor.withOpacity(0.2))),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
+                        const SizedBox(width: 6),
+                        Text(statusText, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('${project.createdAt.month}/${project.createdAt.day}/${project.createdAt.year}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
