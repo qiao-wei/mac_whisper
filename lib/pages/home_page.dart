@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'dart:ui' as ui;
 import '../models/project.dart';
 import '../services/database_service.dart';
@@ -50,6 +51,7 @@ class _HomePageState extends State<HomePage> {
   final _db = DatabaseService();
   List<Project> _projects = [];
   bool _isLoading = true;
+  bool _isDragging = false;
 
   @override
   void initState() {
@@ -80,6 +82,19 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
+  Future<void> _handleFileDrop(DropDoneDetails details) async {
+    if (details.files.isEmpty) return;
+    final file = details.files.first;
+    final path = file.path;
+    final name = file.name;
+    final ext = name.split('.').last.toLowerCase();
+    if (!['mp4', 'mov', 'mp3', 'wav', 'avi', 'mkv', 'm4a'].contains(ext)) return;
+    final project = Project(id: DateTime.now().millisecondsSinceEpoch.toString(), name: name, status: ProjectStatus.inProgress, createdAt: DateTime.now(), videoPath: path);
+    await _db.insertProject(project);
+    setState(() => _projects.insert(0, project));
+    if (mounted) _openSubtitleEditor(projectId: project.id, projectName: project.name);
+  }
+
   List<Project> get _filteredProjects {
     return _projects.where((p) {
       if (_activeTab == 'In Progress') return p.status == ProjectStatus.inProgress;
@@ -89,9 +104,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _openFile() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.video);
-    if (result != null && mounted) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => EditorPage(videoPath: result.files.single.path!)));
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mp4', 'mov', 'mp3', 'wav', 'avi', 'mkv', 'm4a'],
+    );
+    if (result != null && result.files.isNotEmpty && mounted) {
+      final file = result.files.single;
+      final project = Project(id: DateTime.now().millisecondsSinceEpoch.toString(), name: file.name, status: ProjectStatus.inProgress, createdAt: DateTime.now(), videoPath: file.path);
+      await _db.insertProject(project);
+      setState(() => _projects.insert(0, project));
+      if (mounted) _openSubtitleEditor(projectId: project.id, projectName: project.name);
     }
   }
 
@@ -309,33 +331,40 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 8),
           const Text('Get started by uploading a file or pasting a link below', style: TextStyle(color: Colors.grey, fontSize: 14), textAlign: TextAlign.center),
           const SizedBox(height: 32),
-          InkWell(
-            onTap: _openFile,
-            borderRadius: BorderRadius.circular(20),
+          DropTarget(
+            onDragEntered: (_) => setState(() => _isDragging = true),
+            onDragExited: (_) => setState(() => _isDragging = false),
+            onDragDone: (details) { setState(() => _isDragging = false); _handleFileDrop(details); },
             child: CustomPaint(
-              painter: _DashedBorderPainter(color: Colors.grey.shade700, radius: 20),
+              painter: _DashedBorderPainter(color: _isDragging ? Colors.blue : Colors.grey.shade700, radius: 20),
               child: Container(
                 constraints: const BoxConstraints(minHeight: 220),
                 padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(color: const Color(0xFF13161F), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: _isDragging ? const Color(0xFF1A2332) : const Color(0xFF13161F), borderRadius: BorderRadius.circular(20)),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
                       width: 48,
                       height: 48,
-                      decoration: BoxDecoration(color: Colors.grey.shade800, borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.cloud_upload_outlined, size: 24, color: Colors.grey),
+                      decoration: BoxDecoration(color: _isDragging ? Colors.blue.shade800 : Colors.grey.shade800, borderRadius: BorderRadius.circular(8)),
+                      child: Icon(Icons.cloud_upload_outlined, size: 24, color: _isDragging ? Colors.blue.shade200 : Colors.grey),
                     ),
                     const SizedBox(height: 16),
-                    Text('Drag & Drop Audio/Video File Here', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade200)),
+                    Text(_isDragging ? 'Drop file here' : 'Drag & Drop Audio/Video File Here', style: TextStyle(fontWeight: FontWeight.w600, color: _isDragging ? Colors.blue.shade200 : Colors.grey.shade200)),
                     const SizedBox(height: 8),
                     Text('Supports MP3, WAV, MP4, MOV, etc.', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                     const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.grey.shade800, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade700)),
-                      child: const Text('Choose File', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: _openFile,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                          decoration: BoxDecoration(color: Colors.grey.shade800, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade700)),
+                          child: const Text('Choose File', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                        ),
+                      ),
                     ),
                   ],
                 ),

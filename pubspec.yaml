@@ -17,6 +17,8 @@ dependencies:
   path: ^1.8.3
   sqflite: ^2.3.0
   path_provider: ^2.1.1
+  desktop_drop: ^0.4.4
+  cross_file: ^0.3.3+6
 
 dev_dependencies:
   flutter_test:
