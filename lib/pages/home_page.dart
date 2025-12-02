@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'dart:ui' as ui;
@@ -80,6 +81,23 @@ class _HomePageState extends State<HomePage> {
   Future<void> _updateProject(Project p) async {
     await _db.updateProject(p);
     setState(() {});
+  }
+
+  Future<void> _deleteProject(Project p) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('Delete Project'),
+        content: Text('Delete "${p.name}"?'),
+        actions: [
+          CupertinoDialogAction(child: const Text('Cancel'), onPressed: () => Navigator.pop(ctx, false)),
+          CupertinoDialogAction(isDestructiveAction: true, child: const Text('Delete'), onPressed: () => Navigator.pop(ctx, true)),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await _db.deleteProject(p.id);
+    setState(() => _projects.removeWhere((proj) => proj.id == p.id));
   }
 
   Future<void> _handleFileDrop(DropDoneDetails details) async {
@@ -305,6 +323,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildProjectItem(Project project) {
     return _ProjectItemWidget(
+      key: ValueKey(project.id),
       project: project,
       isSelected: _selectedProjectId == project.id,
       onTap: () => setState(() => _selectedProjectId = _selectedProjectId == project.id ? null : project.id),
@@ -317,6 +336,7 @@ class _HomePageState extends State<HomePage> {
         project.name = name;
         _updateProject(project);
       },
+      onDelete: () => _deleteProject(project),
     );
   }
 
@@ -413,7 +433,8 @@ class _ProjectItemWidget extends StatefulWidget {
   final VoidCallback onDoubleTap;
   final VoidCallback onStatusToggle;
   final Function(String) onNameChanged;
-  const _ProjectItemWidget({required this.project, required this.isSelected, required this.onTap, required this.onDoubleTap, required this.onStatusToggle, required this.onNameChanged});
+  final VoidCallback onDelete;
+  const _ProjectItemWidget({super.key, required this.project, required this.isSelected, required this.onTap, required this.onDoubleTap, required this.onStatusToggle, required this.onNameChanged, required this.onDelete});
   @override
   State<_ProjectItemWidget> createState() => _ProjectItemWidgetState();
 }
@@ -513,6 +534,18 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
                   const SizedBox(height: 8),
                   Text('${project.createdAt.month}/${project.createdAt.day}/${project.createdAt.year}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
+              ),
+              const SizedBox(width: 12),
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: widget.onDelete,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(8)),
+                    child: Icon(Icons.delete_outline, size: 20, color: _isHovered ? Colors.red.shade400 : Colors.grey.shade600),
+                  ),
+                ),
               ),
             ],
           ),
