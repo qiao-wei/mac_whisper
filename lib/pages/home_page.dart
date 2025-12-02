@@ -263,6 +263,7 @@ class _HomePageState extends State<HomePage> {
       isSelected: _selectedProjectId == project.id,
       onTap: () => setState(() => _selectedProjectId = _selectedProjectId == project.id ? null : project.id),
       onDoubleTap: () => _openSubtitleEditor(projectName: project.name),
+      onStatusToggle: () => setState(() => project.status = project.status == ProjectStatus.completed ? ProjectStatus.inProgress : ProjectStatus.completed),
     );
   }
 
@@ -350,7 +351,8 @@ class _ProjectItemWidget extends StatefulWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final VoidCallback onDoubleTap;
-  const _ProjectItemWidget({required this.project, required this.isSelected, required this.onTap, required this.onDoubleTap});
+  final VoidCallback onStatusToggle;
+  const _ProjectItemWidget({required this.project, required this.isSelected, required this.onTap, required this.onDoubleTap, required this.onStatusToggle});
   @override
   State<_ProjectItemWidget> createState() => _ProjectItemWidgetState();
 }
@@ -429,16 +431,22 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: statusColor.withOpacity(0.2))),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
-                        const SizedBox(width: 6),
-                        Text(statusText, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500)),
-                      ],
+                  GestureDetector(
+                    onTap: widget.onStatusToggle,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: statusColor.withOpacity(0.2))),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
+                            const SizedBox(width: 6),
+                            Text(statusText, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),

@@ -2,9 +2,9 @@ enum ProjectStatus { inProgress, completed }
 
 class Project {
   final String id;
-  final String name;
+  String name;
   final String? thumbnailPath;
-  final ProjectStatus status;
+  ProjectStatus status;
   final DateTime createdAt;
   final String? videoPath;
 
