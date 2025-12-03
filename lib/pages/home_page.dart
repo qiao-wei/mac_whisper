@@ -62,20 +62,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadProjects() async {
     final projects = await _db.getProjects();
-    if (projects.isEmpty) {
-      // Insert sample data on first run
-      final samples = [
-        Project(id: '1', name: 'My Vacation Video.mp4', status: ProjectStatus.completed, createdAt: DateTime.now()),
-        Project(id: '2', name: 'Podcast Interview Ep5.mp3', status: ProjectStatus.inProgress, createdAt: DateTime.now().subtract(const Duration(days: 1))),
-        Project(id: '3', name: 'Product Demo.mov', status: ProjectStatus.inProgress, createdAt: DateTime.now().subtract(const Duration(days: 5))),
-      ];
-      for (final p in samples) {
-        await _db.insertProject(p);
-      }
-      setState(() { _projects = samples; _isLoading = false; });
-    } else {
-      setState(() { _projects = projects; _isLoading = false; });
-    }
+    setState(() { _projects = projects; _isLoading = false; });
   }
 
   Future<void> _updateProject(Project p) async {

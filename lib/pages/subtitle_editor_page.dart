@@ -71,14 +71,6 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         return;
       }
     }
-    // Default sample data
-    setState(() {
-      _subtitles = [
-        SubtitleItem(id: 1, startTime: '00:00:15,250', endTime: '00:00:18,100', text: 'This is the first line of the subtitle.', translatedText: 'Esta es la primera línea del subtítulo.'),
-        SubtitleItem(id: 2, startTime: '00:00:18,500', endTime: '00:00:21,300', text: 'And this is the\nsecond line example.', translatedText: 'Y esta es la segunda línea,\ndemostrando el contenido.', selected: true),
-        SubtitleItem(id: 3, startTime: '00:00:22,000', endTime: '00:00:25,150', text: 'Each row represents a single subtitle segment.', translatedText: 'Cada fila representa un único segmento de subtítulo.'),
-      ];
-    });
   }
 
   Future<void> _saveSubtitles() async {
