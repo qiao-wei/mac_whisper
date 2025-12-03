@@ -92,6 +92,7 @@ class DatabaseService {
 
   Future<void> deleteProject(String id) async {
     final db = await database;
+    await db.delete('subtitles', where: 'project_id = ?', whereArgs: [id]);
     await db.delete('projects', where: 'id = ?', whereArgs: [id]);
   }
 
