@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 
@@ -43,6 +45,14 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   bool _isEditingTitle = false;
   late String _title;
   final _titleController = TextEditingController();
+  bool _isGenerating = false;
+  String _progressText = '';
+  String _selectedModel = 'base';
+  bool _isDownloading = false;
+  static const _models = ['tiny', 'base', 'small', 'medium', 'large'];
+  final _scrollController = ScrollController();
+  Process? _currentProcess;
+  List<SubtitleItem> _previousSubtitles = [];
 
   List<SubtitleItem> _subtitles = [];
 
@@ -51,6 +61,14 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     super.initState();
     _title = widget.projectName ?? 'Subtitle Editor';
     _loadSubtitles();
+    _loadSelectedModel();
+  }
+
+  Future<void> _loadSelectedModel() async {
+    final model = await _db.getConfig('selected_model');
+    if (model != null && _models.contains(model)) {
+      setState(() => _selectedModel = model);
+    }
   }
 
   Future<void> _loadSubtitles() async {
@@ -92,6 +110,173 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
 
   SubtitleItem? get _activeSubtitle => _subtitles.where((s) => s.selected).firstOrNull;
   int get _selectedCount => _subtitles.where((s) => s.selected).length;
+
+  Future<bool> _isModelDownloaded(String model) async {
+    final home = Platform.environment['HOME'];
+    final dir = Directory('$home/.cache/whisper');
+    if (!dir.existsSync()) return false;
+    return dir.listSync().any((f) => f.path.contains('/$model'));
+  }
+
+  void _stopProcess() {
+    _currentProcess?.kill();
+    _currentProcess = null;
+    // Delete partial model download
+    if (_isDownloading || _progressText.contains('Downloading')) {
+      final home = Platform.environment['HOME'];
+      final dir = Directory('$home/.cache/whisper');
+      if (dir.existsSync()) {
+        for (final f in dir.listSync()) {
+          if (f.path.contains('/$_selectedModel')) {
+            try { f.deleteSync(); } catch (_) {}
+          }
+        }
+      }
+    }
+    // Restore previous subtitles or clear partial extraction
+    if (_isGenerating) {
+      if (_previousSubtitles.isNotEmpty) {
+        _subtitles = List.from(_previousSubtitles);
+      } else {
+        _subtitles.clear();
+      }
+      _previousSubtitles.clear();
+    }
+    setState(() { _isGenerating = false; _isDownloading = false; _progressText = ''; });
+  }
+
+  Future<bool> _downloadModel(String model) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Download Model'),
+        content: Text('Model "$model" is not downloaded. Download now?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Download')),
+        ],
+      ),
+    );
+    if (confirm != true) return false;
+    setState(() { _isDownloading = true; _progressText = 'Downloading 0%'; });
+    try {
+      // Use python to download the model directly
+      _currentProcess = await Process.start('python3', ['-c', 'import whisper; whisper.load_model("$model")'], environment: {'PYTHONUNBUFFERED': '1'});
+      _currentProcess!.stderr.transform(utf8.decoder).listen((data) {
+        final match = RegExp(r'(\d+)%').firstMatch(data);
+        if (match != null) setState(() => _progressText = 'Downloading ${match.group(1)}%');
+      });
+      _currentProcess!.stdout.transform(utf8.decoder).listen((data) {
+        final match = RegExp(r'(\d+)%').firstMatch(data);
+        if (match != null) setState(() => _progressText = 'Downloading ${match.group(1)}%');
+      });
+      final exitCode = await _currentProcess!.exitCode;
+      _currentProcess = null;
+      return exitCode == 0 || await _isModelDownloaded(model);
+    } finally {
+      setState(() { _isDownloading = false; _progressText = ''; });
+    }
+  }
+
+  Future<void> _generateSubtitles() async {
+    final videoPath = await _db.getProjectVideoPath(widget.projectId!);
+    if (videoPath == null) return;
+    if (_subtitles.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Replace Subtitles'),
+          content: const Text('This will delete existing subtitles. Continue?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Replace')),
+          ],
+        ),
+      );
+      if (confirm != true) return;
+    }
+    if (!await _isModelDownloaded(_selectedModel)) {
+      if (!await _downloadModel(_selectedModel)) return;
+    }
+    _previousSubtitles = List.from(_subtitles);
+    setState(() { _isGenerating = true; _progressText = 'Extracting...'; _subtitles = []; });
+    try {
+      _currentProcess = await Process.start('whisper', [videoPath, '--model', _selectedModel, '--verbose', 'True', '--output_format', 'srt', '--output_dir', '/tmp'], environment: {'PYTHONUNBUFFERED': '1'});
+      _currentProcess!.stdout.transform(utf8.decoder).listen((data) {
+        print('stdout: $data');
+        _parseWhisperOutput(data);
+      });
+      _currentProcess!.stderr.transform(utf8.decoder).listen((data) {
+        print('stderr: $data');
+        final match = RegExp(r'(\d+)%').firstMatch(data);
+        if (match != null && data.contains('MiB')) {
+          setState(() => _progressText = 'Downloading ${match.group(1)}%');
+        } else if (data.contains('Detecting language') || data.contains('Detected language')) {
+          setState(() => _progressText = 'Extracting...');
+        }
+        _parseWhisperOutput(data);
+      });
+      final exitCode = await _currentProcess!.exitCode;
+      _currentProcess = null;
+      if (exitCode == 0) {
+        // If no subtitles parsed in real-time, read from SRT file
+        if (_subtitles.isEmpty) {
+          final srtPath = '/tmp/${videoPath.split('/').last.replaceAll(RegExp(r'\.[^.]+$'), '.srt')}';
+          final srtFile = File(srtPath);
+          if (await srtFile.exists()) {
+            _parseSrt(await srtFile.readAsString());
+          }
+        }
+        await _saveSubtitles();
+      }
+    } finally {
+      _previousSubtitles.clear();
+      setState(() { _isGenerating = false; _progressText = ''; });
+    }
+  }
+
+  void _parseWhisperOutput(String data) {
+    // Match whisper output: [00:00.000 --> 00:02.320] text (MM:SS.mmm format)
+    final regex = RegExp(r'\[(\d{2}:\d{2}[.,]\d{3})\s*-->\s*(\d{2}:\d{2}[.,]\d{3})\]\s*(.*)');
+    for (final line in data.split('\n')) {
+      final match = regex.firstMatch(line);
+      if (match != null) {
+        // Convert MM:SS.mmm to HH:MM:SS,mmm
+        final start = '00:${match.group(1)!.replaceAll('.', ',')}';
+        final end = '00:${match.group(2)!.replaceAll('.', ',')}';
+        final text = match.group(3)?.trim() ?? '';
+        if (text.isNotEmpty) {
+          setState(() => _subtitles.add(SubtitleItem(id: _subtitles.length + 1, startTime: start, endTime: end, text: text, translatedText: '')));
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(_scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
+            }
+          });
+        }
+      }
+    }
+  }
+
+  void _parseSrt(String content) {
+    final blocks = content.trim().split(RegExp(r'\n\n+'));
+    final items = <SubtitleItem>[];
+    for (var i = 0; i < blocks.length; i++) {
+      final lines = blocks[i].split('\n');
+      if (lines.length >= 3) {
+        final timeParts = lines[1].split(' --> ');
+        if (timeParts.length == 2) {
+          items.add(SubtitleItem(
+            id: i + 1,
+            startTime: timeParts[0].trim(),
+            endTime: timeParts[1].trim(),
+            text: lines.sublist(2).join('\n'),
+            translatedText: '',
+          ));
+        }
+      }
+    }
+    setState(() => _subtitles = items);
+  }
 
   int _parseTimeToMs(String timeStr) {
     final parts = timeStr.split(':');
@@ -244,6 +429,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   void dispose() {
     _editController.dispose();
     _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -313,6 +499,35 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   child: Text(_title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
                 ),
           const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.purple.shade900.withOpacity(0.6), Colors.blue.shade900.withOpacity(0.6)]),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.purple.shade700.withOpacity(0.5)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.memory, size: 14, color: Colors.purple.shade300),
+                const SizedBox(width: 6),
+                DropdownButton<String>(
+                  value: _selectedModel,
+                  dropdownColor: const Color(0xFF1E1E2E),
+                  underline: const SizedBox(),
+                  isDense: true,
+                  icon: Icon(Icons.expand_more, size: 16, color: Colors.purple.shade300),
+                  items: _models.map((m) => DropdownMenuItem(value: m, child: Text(m.toUpperCase(), style: TextStyle(color: Colors.purple.shade100, fontWeight: FontWeight.w600, fontSize: 12, letterSpacing: 0.5)))).toList(),
+                  onChanged: _isGenerating || _isDownloading ? null : (v) { setState(() => _selectedModel = v!); _db.setConfig('selected_model', v!); },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          _isGenerating || _isDownloading
+              ? ElevatedButton(onPressed: _stopProcess, style: ElevatedButton.styleFrom(backgroundColor: Colors.red, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)), child: Row(mainAxisSize: MainAxisSize.min, children: [const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)), const SizedBox(width: 8), Text(_progressText, style: const TextStyle(fontSize: 12)), const SizedBox(width: 8), const Icon(Icons.stop, size: 16)]))
+              : ElevatedButton(onPressed: _generateSubtitles, style: ElevatedButton.styleFrom(backgroundColor: Colors.green, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)), child: const Text('Generate Subtitles', style: TextStyle(fontWeight: FontWeight.w500))),
+          const SizedBox(width: 12),
           ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)), child: const Text('Merge to Video', style: TextStyle(fontWeight: FontWeight.w500))),
           const SizedBox(width: 12),
           OutlinedButton(onPressed: () {}, style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.grey.shade600), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)), child: const Text('Export Subtitles', style: TextStyle(color: Colors.grey))),
@@ -328,7 +543,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         children: [
           _buildToolbar(),
           _buildTableHeader(),
-          Expanded(child: ListView.builder(itemCount: _subtitles.length, itemBuilder: (_, i) => _buildSubtitleRow(_subtitles[i], i))),
+          Expanded(child: ListView.builder(controller: _scrollController, itemCount: _subtitles.length, itemBuilder: (_, i) => _buildSubtitleRow(_subtitles[i], i))),
         ],
       ),
     );
@@ -342,7 +557,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       child: Row(
         children: [
           IconButton(icon: const Icon(Icons.undo, size: 18), color: Colors.grey, onPressed: () {}),
-          IconButton(icon: const Icon(Icons.delete_outline, size: 18), color: Colors.grey, onPressed: () {}),
+          IconButton(icon: const Icon(Icons.delete_outline, size: 18), color: Colors.grey, onPressed: _selectedCount > 0 ? () { setState(() => _subtitles.removeWhere((s) => s.selected)); _saveSubtitles(); } : null),
           _buildMergeSplitButton(Icons.merge, 'Merge', _selectedCount >= 2, _handleMerge),
           _buildMergeSplitButton(Icons.content_cut, 'Split', _selectedCount == 1, _handleSplit),
           Container(width: 1, height: 16, color: Colors.grey.shade700, margin: const EdgeInsets.symmetric(horizontal: 8)),
@@ -386,7 +601,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade800))),
       child: Row(
         children: [
-          SizedBox(width: 40, child: Container(width: 16, height: 16, decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade600), borderRadius: BorderRadius.circular(4)))),
+          SizedBox(width: 40, child: Checkbox(value: _subtitles.isNotEmpty && _selectedCount == _subtitles.length, tristate: true, onChanged: (_) => setState(() { final selectAll = _selectedCount != _subtitles.length; for (var s in _subtitles) s.selected = selectAll; }))),
           const SizedBox(width: 96, child: Text('START TIME', style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w600))),
           const SizedBox(width: 96, child: Text('END TIME', style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w600))),
           const Expanded(child: Text('SUBTITLE TEXT', style: TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w600))),
@@ -409,23 +624,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: 40,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => _handleCheckboxClick(index),
-                    child: Container(
-                      width: 16, height: 16,
-                      decoration: BoxDecoration(color: sub.selected ? Colors.blue : null, border: Border.all(color: sub.selected ? Colors.blue : Colors.grey.shade600), borderRadius: BorderRadius.circular(4)),
-                      child: sub.selected ? const Icon(Icons.check, size: 12, color: Colors.white) : null,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('${sub.id}', style: TextStyle(color: sub.selected ? Colors.blue.shade400 : Colors.grey, fontSize: 14)),
-                ],
-              ),
-            ),
+            SizedBox(width: 40, child: Checkbox(value: sub.selected, onChanged: (_) => _handleCheckboxClick(index))),
             SizedBox(width: 96, child: _buildEditableCell(sub, 'startTime', true)),
             SizedBox(width: 96, child: _buildEditableCell(sub, 'endTime', true)),
             Expanded(child: _buildEditableCell(sub, 'text', false)),

@@ -55,6 +55,12 @@ class DatabaseService {
   }
 
   // Projects
+  Future<String?> getProjectVideoPath(String id) async {
+    final db = await database;
+    final result = await db.query('projects', columns: ['video_path'], where: 'id = ?', whereArgs: [id]);
+    return result.isNotEmpty ? result.first['video_path'] as String? : null;
+  }
+
   Future<List<Project>> getProjects() async {
     final db = await database;
     final maps = await db.query('projects', orderBy: 'created_at DESC');
@@ -140,9 +146,14 @@ class DatabaseService {
     await db.delete('subtitles', where: 'project_id = ?', whereArgs: [projectId]);
   }
 
-  Future<void> saveSubtitles(String projectId, List<Map<String, dynamic>> subtitles) async {
+  Future<void> deleteSubtitles(String projectId) async {
     final db = await database;
     await db.delete('subtitles', where: 'project_id = ?', whereArgs: [projectId]);
+  }
+
+  Future<void> saveSubtitles(String projectId, List<Map<String, dynamic>> subtitles) async {
+    final db = await database;
+    await deleteSubtitles(projectId);
     for (var i = 0; i < subtitles.length; i++) {
       final s = subtitles[i];
       await db.insert('subtitles', {
