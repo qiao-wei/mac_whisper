@@ -317,8 +317,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _openSubtitleEditor({String? projectId, String? projectName}) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => SubtitleEditorPage(projectId: projectId, projectName: projectName)));
+  Future<void> _openSubtitleEditor({String? projectId, String? projectName}) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => SubtitleEditorPage(projectId: projectId, projectName: projectName)));
+    if (mounted) {
+      final projects = await _db.getProjects();
+      print('Reloaded ${projects.length} projects: ${projects.map((p) => p.name).toList()}');
+      setState(() => _projects = projects);
+    }
   }
 
   Widget _buildProjectItem(Project project) {
@@ -448,6 +453,14 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.project.name);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProjectItemWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.project.name != widget.project.name) {
+      _nameController.text = widget.project.name;
+    }
   }
 
   @override

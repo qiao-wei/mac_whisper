@@ -40,12 +40,16 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   final _editController = TextEditingController();
   final _focusNode = FocusNode();
   final _db = DatabaseService();
+  bool _isEditingTitle = false;
+  late String _title;
+  final _titleController = TextEditingController();
 
   List<SubtitleItem> _subtitles = [];
 
   @override
   void initState() {
     super.initState();
+    _title = widget.projectName ?? 'Subtitle Editor';
     _loadSubtitles();
   }
 
@@ -86,6 +90,12 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       'translated_text': s.translatedText,
     }).toList();
     await _db.saveSubtitles(widget.projectId!, data);
+  }
+
+  Future<void> _updateProjectName(String name) async {
+    if (widget.projectId != null) {
+      await _db.updateProjectName(widget.projectId!, name);
+    }
   }
 
   SubtitleItem? get _activeSubtitle => _subtitles.where((s) => s.selected).firstOrNull;
@@ -294,7 +304,22 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           const SizedBox(width: 12),
           Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: Colors.grey.shade800, borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.subtitles, color: Colors.white, size: 16)),
           const SizedBox(width: 12),
-          Text(widget.projectName ?? 'Subtitle Editor', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+          _isEditingTitle
+              ? SizedBox(
+                  width: 200,
+                  child: TextField(
+                    controller: _titleController,
+                    autofocus: true,
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                    decoration: const InputDecoration(isDense: true, border: InputBorder.none),
+                    onSubmitted: (v) => setState(() { _title = v; _isEditingTitle = false; _updateProjectName(v); }),
+                    onTapOutside: (_) => setState(() { _title = _titleController.text; _isEditingTitle = false; _updateProjectName(_titleController.text); }),
+                  ),
+                )
+              : GestureDetector(
+                  onDoubleTap: () => setState(() { _titleController.text = _title; _isEditingTitle = true; }),
+                  child: Text(_title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18)),
+                ),
           const Spacer(),
           ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)), child: const Text('Merge to Video', style: TextStyle(fontWeight: FontWeight.w500))),
           const SizedBox(width: 12),

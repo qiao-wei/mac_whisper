@@ -16,7 +16,11 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     final path = join(await getDatabasesPath(), 'uf_app.db');
-    return openDatabase(path, version: 1, onCreate: _onCreate);
+    return openDatabase(path, version: 2, onCreate: _onCreate, onUpgrade: _onUpgrade);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    // Migration handled - columns already exist in schema
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -89,6 +93,12 @@ class DatabaseService {
   Future<void> deleteProject(String id) async {
     final db = await database;
     await db.delete('projects', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> updateProjectName(String id, String name) async {
+    final db = await database;
+    final count = await db.update('projects', {'name': name}, where: 'id = ?', whereArgs: [id]);
+    print('updateProjectName: id=$id, name=$name, updated=$count rows');
   }
 
   // Subtitles
