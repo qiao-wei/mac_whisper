@@ -53,6 +53,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   final _scrollController = ScrollController();
   Process? _currentProcess;
   List<SubtitleItem> _previousSubtitles = [];
+  final List<List<SubtitleItem>> _undoStack = [];
+  final List<List<SubtitleItem>> _redoStack = [];
 
   List<SubtitleItem> _subtitles = [];
 
@@ -110,6 +112,28 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
 
   SubtitleItem? get _activeSubtitle => _subtitles.where((s) => s.selected).firstOrNull;
   int get _selectedCount => _subtitles.where((s) => s.selected).length;
+
+  List<SubtitleItem> _cloneSubtitles() => _subtitles.map((s) => SubtitleItem(dbId: s.dbId, id: s.id, startTime: s.startTime, endTime: s.endTime, text: s.text, translatedText: s.translatedText, selected: s.selected)).toList();
+
+  void _pushUndo() {
+    _undoStack.add(_cloneSubtitles());
+    _redoStack.clear();
+    if (_undoStack.length > 50) _undoStack.removeAt(0);
+  }
+
+  void _undo() {
+    if (_undoStack.isEmpty) return;
+    _redoStack.add(_cloneSubtitles());
+    setState(() => _subtitles = _undoStack.removeLast());
+    _saveSubtitles();
+  }
+
+  void _redo() {
+    if (_redoStack.isEmpty) return;
+    _undoStack.add(_cloneSubtitles());
+    setState(() => _subtitles = _redoStack.removeLast());
+    _saveSubtitles();
+  }
 
   Future<bool> _isModelDownloaded(String model) async {
     final home = Platform.environment['HOME'];
@@ -332,6 +356,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   void _handleMerge() {
     final selectedIndices = _subtitles.asMap().entries.where((e) => e.value.selected).map((e) => e.key).toList();
     if (selectedIndices.length < 2) return;
+    _pushUndo();
     final firstIdx = selectedIndices.reduce((a, b) => a < b ? a : b);
     final lastIdx = selectedIndices.reduce((a, b) => a > b ? a : b);
     final mergedSubs = _subtitles.sublist(firstIdx, lastIdx + 1);
@@ -355,6 +380,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   void _handleSplit() {
     final selectedIdx = _subtitles.indexWhere((s) => s.selected);
     if (selectedIdx == -1) return;
+    _pushUndo();
     final original = _subtitles[selectedIdx];
     final startMs = _parseTimeToMs(original.startTime);
     final endMs = _parseTimeToMs(original.endTime);
@@ -398,6 +424,14 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     if (_editingId != null && _editingField != null) {
       final idx = _subtitles.indexWhere((s) => s.id == _editingId);
       if (idx != -1) {
+        final oldValue = switch (_editingField) {
+          'startTime' => _subtitles[idx].startTime,
+          'endTime' => _subtitles[idx].endTime,
+          'text' => _subtitles[idx].text,
+          'translatedText' => _subtitles[idx].translatedText,
+          _ => '',
+        };
+        if (oldValue != _editController.text) _pushUndo();
         setState(() {
           switch (_editingField) {
             case 'startTime': _subtitles[idx].startTime = _editController.text; break;
@@ -416,6 +450,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   void _handleDelete(int id) {
+    _pushUndo();
     setState(() {
       _subtitles.removeWhere((s) => s.id == id);
       for (var i = 0; i < _subtitles.length; i++) {
@@ -556,8 +591,9 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: Colors.grey.shade800))),
       child: Row(
         children: [
-          IconButton(icon: const Icon(Icons.undo, size: 18), color: Colors.grey, onPressed: () {}),
-          IconButton(icon: const Icon(Icons.delete_outline, size: 18), color: Colors.grey, onPressed: _selectedCount > 0 ? () { setState(() => _subtitles.removeWhere((s) => s.selected)); _saveSubtitles(); } : null),
+          IconButton(icon: const Icon(Icons.undo, size: 18), color: _undoStack.isNotEmpty ? Colors.grey : Colors.grey.shade700, onPressed: _undoStack.isNotEmpty ? _undo : null),
+          IconButton(icon: const Icon(Icons.redo, size: 18), color: _redoStack.isNotEmpty ? Colors.grey : Colors.grey.shade700, onPressed: _redoStack.isNotEmpty ? _redo : null),
+          IconButton(icon: const Icon(Icons.delete_outline, size: 18), color: Colors.grey, onPressed: _selectedCount > 0 ? () { _pushUndo(); setState(() => _subtitles.removeWhere((s) => s.selected)); _saveSubtitles(); } : null),
           _buildMergeSplitButton(Icons.merge, 'Merge', _selectedCount >= 2, _handleMerge),
           _buildMergeSplitButton(Icons.content_cut, 'Split', _selectedCount == 1, _handleSplit),
           Container(width: 1, height: 16, color: Colors.grey.shade700, margin: const EdgeInsets.symmetric(horizontal: 8)),
