@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Export Options</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#135bec",
+              "background-light": "#f6f6f8",
+              "background-dark": "#101622",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white">
+<div class="relative flex h-auto min-h-screen w-full flex-col items-center justify-center p-4">
+<div class="flex w-full max-w-[480px] flex-col rounded-xl border border-white/10 bg-[#161d2c] shadow-2xl">
+<!-- Page Heading -->
+<div class="flex flex-wrap items-center justify-between gap-3 p-6 border-b border-white/10">
+<div class="flex flex-col gap-1">
+<p class="text-white tracking-tight text-xl font-bold leading-tight">Export Options</p>
+<p class="text-[#92a4c9] text-sm font-normal leading-normal">Select the format and merge options for your subtitles.</p>
+</div>
+</div>
+<div class="flex flex-col p-2">
+<!-- Subtitle Format Section -->
+<h2 class="text-white text-base font-bold leading-tight tracking-[-0.015em] px-4 text-left pb-1 pt-4">Format</h2>
+<div class="flex px-4 py-3">
+<div class="flex h-10 flex-1 items-center justify-center rounded-lg bg-background-dark p-1">
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-[#2c3752] has-[:checked]:shadow-[0_1px_3px_rgba(0,0,0,0.1)] has-[:checked]:text-white text-[#92a4c9] text-sm font-medium leading-normal transition-colors">
+<span class="truncate">SRT</span>
+<input checked="" class="invisible w-0" name="subtitle-format" type="radio" value="SRT"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-[#2c3752] has-[:checked]:shadow-[0_1px_3px_rgba(0,0,0,0.1)] has-[:checked]:text-white text-[#92a4c9] text-sm font-medium leading-normal transition-colors">
+<span class="truncate">VTT</span>
+<input class="invisible w-0" name="subtitle-format" type="radio" value="VTT"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-[#2c3752] has-[:checked]:shadow-[0_1px_3px_rgba(0,0,0,0.1)] has-[:checked]:text-white text-[#92a4c9] text-sm font-medium leading-normal transition-colors">
+<span class="truncate">ASS</span>
+<input class="invisible w-0" name="subtitle-format" type="radio" value="ASS"/>
+</label>
+</div>
+</div>
+<!-- Video Output Section -->
+<h2 class="text-white text-base font-bold leading-tight tracking-[-0.015em] px-4 text-left pb-1 pt-4">Video Output</h2>
+<div class="px-4">
+<label class="flex gap-x-3 py-3">
+<input class="h-5 w-5 shrink-0 rounded border-2 border-[#324467] bg-transparent text-primary checked:border-primary checked:bg-primary checked:bg-[url('data:image/svg+xml,%3csvg_viewBox=%270_0_16_16%27_fill=%27white%27_xmlns=%27http://www.w3.org/2000/svg%27%3e%3cpath_d=%27M12.207_4.793a1_1_0_010_1.414l-5_5a1_1_0_01-1.414_0l-2-2a1_1_0_011.414-1.414L6.5_9.086l4.293-4.293a1_1_0_011.414_0z%27/%3e%3c/svg%3e')] focus:border-[#324467] focus:outline-none focus:ring-0 focus:ring-offset-0 disabled:border-white/20 disabled:checked:bg-white/20" type="checkbox"/>
+<p class="text-white text-sm font-normal leading-normal">Merge subtitles into original video</p>
+</label>
+</div>
+<p class="text-[#92a4c9] text-xs font-normal leading-normal pb-3 pt-0 px-4">This option is only available for local video files.</p>
+<!-- Progress Indicator Section (Initially Hidden/Shown During Processing) -->
+<div class="px-4 py-4 space-y-2">
+<div class="flex justify-between items-center">
+<p class="text-sm font-medium text-white">Merging video...</p>
+<p class="text-sm font-mono text-[#92a4c9]">45%</p>
+</div>
+<div class="w-full bg-background-dark rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+<!-- Footer Buttons -->
+<div class="flex items-center justify-end gap-3 p-4 bg-[#111722]/60 rounded-b-xl border-t border-white/10">
+<button class="flex items-center justify-center whitespace-nowrap px-4 py-2 text-sm font-medium tracking-tight rounded-lg transition-colors text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Cancel</button>
+<button class="flex items-center justify-center whitespace-nowrap px-4 py-2 text-sm font-medium tracking-tight rounded-lg transition-colors text-white bg-primary hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Export &amp; Merge</button>
+</div>
+</div>
+</div>
+</body></html>
