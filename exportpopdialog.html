@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -38,7 +37,6 @@
 <body class="bg-background-light dark:bg-background-dark font-display text-white">
 <div class="relative flex h-auto min-h-screen w-full flex-col items-center justify-center p-4">
 <div class="flex w-full max-w-[480px] flex-col rounded-xl border border-white/10 bg-[#161d2c] shadow-2xl">
-<!-- Page Heading -->
 <div class="flex flex-wrap items-center justify-between gap-3 p-6 border-b border-white/10">
 <div class="flex flex-col gap-1">
 <p class="text-white tracking-tight text-xl font-bold leading-tight">Export Options</p>
@@ -46,7 +44,6 @@
 </div>
 </div>
 <div class="flex flex-col p-2">
-<!-- Subtitle Format Section -->
 <h2 class="text-white text-base font-bold leading-tight tracking-[-0.015em] px-4 text-left pb-1 pt-4">Format</h2>
 <div class="flex px-4 py-3">
 <div class="flex h-10 flex-1 items-center justify-center rounded-lg bg-background-dark p-1">
@@ -64,7 +61,26 @@
 </label>
 </div>
 </div>
-<!-- Video Output Section -->
+<h2 class="text-white text-base font-bold leading-tight tracking-[-0.015em] px-4 text-left pb-1 pt-4">Select Export Language</h2>
+<div class="px-4 py-3 space-y-3">
+<div class="relative">
+<select class="w-full appearance-none rounded-lg border border-[#324467] bg-background-dark px-3 py-2 text-sm text-white placeholder:text-[#92a4c9] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+<option value="original">Original Language (English)</option>
+<option value="translation1">Translated Language 1 (Spanish)</option>
+<option value="translation2">Translated Language 2 (French)</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#92a4c9]">expand_more</span>
+</div>
+<div class="relative">
+<select class="w-full appearance-none rounded-lg border border-[#324467] bg-background-dark px-3 py-2 text-sm text-white placeholder:text-[#92a4c9] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+<option value="none">None</option>
+<option value="original">Original Language (English)</option>
+<option value="translation1">Translated Language 1 (Spanish)</option>
+<option value="translation2">Translated Language 2 (French)</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#92a4c9]">expand_more</span>
+</div>
+</div>
 <h2 class="text-white text-base font-bold leading-tight tracking-[-0.015em] px-4 text-left pb-1 pt-4">Video Output</h2>
 <div class="px-4">
 <label class="flex gap-x-3 py-3">
@@ -73,7 +89,6 @@
 </label>
 </div>
 <p class="text-[#92a4c9] text-xs font-normal leading-normal pb-3 pt-0 px-4">This option is only available for local video files.</p>
-<!-- Progress Indicator Section (Initially Hidden/Shown During Processing) -->
 <div class="px-4 py-4 space-y-2">
 <div class="flex justify-between items-center">
 <p class="text-sm font-medium text-white">Merging video...</p>
@@ -84,11 +99,11 @@
 </div>
 </div>
 </div>
-<!-- Footer Buttons -->
 <div class="flex items-center justify-end gap-3 p-4 bg-[#111722]/60 rounded-b-xl border-t border-white/10">
 <button class="flex items-center justify-center whitespace-nowrap px-4 py-2 text-sm font-medium tracking-tight rounded-lg transition-colors text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Cancel</button>
 <button class="flex items-center justify-center whitespace-nowrap px-4 py-2 text-sm font-medium tracking-tight rounded-lg transition-colors text-white bg-primary hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Export &amp; Merge</button>
 </div>
 </div>
 </div>
+
 </body></html>
