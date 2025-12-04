@@ -67,36 +67,102 @@ class VideoPreview extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: 16,
-            child: _buildControls(),
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _buildControls(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildControls() {
+  Widget _buildControls(BuildContext context) {
     return ValueListenableBuilder(
       valueListenable: controller,
       builder: (_, value, __) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(
-                value.isPlaying ? Icons.pause : Icons.play_arrow,
-                color: Colors.white,
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Builder(
+                builder: (ctx) => GestureDetector(
+                  onHorizontalDragUpdate: (details) {
+                    final box = ctx.findRenderObject() as RenderBox?;
+                    if (box != null) {
+                      final pos = (details.localPosition.dx / box.size.width).clamp(0.0, 1.0);
+                      controller.seekTo(value.duration * pos);
+                    }
+                  },
+                  onTapDown: (details) {
+                    final box = ctx.findRenderObject() as RenderBox?;
+                    if (box != null) {
+                      final pos = (details.localPosition.dx / box.size.width).clamp(0.0, 1.0);
+                      controller.seekTo(value.duration * pos);
+                    }
+                  },
+                  child: Container(
+                    height: 20,
+                    color: Colors.transparent,
+                    alignment: Alignment.center,
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade700,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final progress = value.duration.inMilliseconds > 0
+                              ? value.position.inMilliseconds / value.duration.inMilliseconds
+                              : 0.0;
+                          return Container(
+                            width: constraints.maxWidth * progress,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              onPressed: () {
-                value.isPlaying ? controller.pause() : controller.play();
-              },
-            ),
-            const SizedBox(width: 8),
-            Text(
-              '${_formatDuration(value.position)} / ${_formatDuration(value.duration)}',
-              style: const TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      value.isPlaying ? Icons.pause : Icons.play_arrow,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      value.isPlaying ? controller.pause() : controller.play();
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _formatDuration(value.position),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _formatDuration(value.duration),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ],
+              ),
+            ],
+          ),
         );
       },
     );

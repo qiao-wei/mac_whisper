@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import '../services/database_service.dart';
+import '../widgets/video_preview.dart';
+import '../models/subtitle.dart';
 
 class SubtitleItem {
   int? dbId;
@@ -55,6 +58,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   List<SubtitleItem> _previousSubtitles = [];
   final List<List<SubtitleItem>> _undoStack = [];
   final List<List<SubtitleItem>> _redoStack = [];
+  VideoPlayerController? _videoController;
+  bool _videoInitialized = false;
 
   List<SubtitleItem> _subtitles = [];
 
@@ -64,6 +69,16 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _title = widget.projectName ?? 'Subtitle Editor';
     _loadSubtitles();
     _loadSelectedModel();
+    _initVideo();
+  }
+
+  Future<void> _initVideo() async {
+    final videoPath = await _db.getProjectVideoPath(widget.projectId!);
+    if (videoPath != null) {
+      _videoController = VideoPlayerController.file(File(videoPath));
+      await _videoController!.initialize();
+      setState(() => _videoInitialized = true);
+    }
   }
 
   Future<void> _loadSelectedModel() async {
@@ -328,6 +343,11 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         sub.selected = sub.id == id;
       }
     });
+    final subtitle = _subtitles.firstWhere((s) => s.id == id);
+    if (_videoController != null && _videoInitialized) {
+      final duration = _parseDuration(subtitle.startTime) + const Duration(milliseconds: 100);
+      _videoController!.seekTo(duration);
+    }
   }
 
   void _handleCheckboxClick(int index) {
@@ -465,6 +485,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _editController.dispose();
     _focusNode.dispose();
     _scrollController.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -649,22 +670,20 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildSubtitleRow(SubtitleItem sub, int index) {
-    return GestureDetector(
-      onTap: () => _handleRowClick(sub.id),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: sub.selected ? const Color(0xFF111C30) : null,
-          border: Border(left: BorderSide(color: sub.selected ? Colors.blue : Colors.transparent, width: 2), bottom: BorderSide(color: Colors.grey.shade800.withOpacity(0.5))),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(width: 40, child: Checkbox(value: sub.selected, onChanged: (_) => _handleCheckboxClick(index))),
-            SizedBox(width: 96, child: _buildEditableCell(sub, 'startTime', true)),
-            SizedBox(width: 96, child: _buildEditableCell(sub, 'endTime', true)),
-            Expanded(child: _buildEditableCell(sub, 'text', false)),
-            Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      decoration: BoxDecoration(
+        color: sub.selected ? const Color(0xFF111C30) : null,
+        border: Border(left: BorderSide(color: sub.selected ? Colors.blue : Colors.transparent, width: 2), bottom: BorderSide(color: Colors.grey.shade800.withOpacity(0.5))),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 40, child: Checkbox(value: sub.selected, onChanged: (_) => _handleCheckboxClick(index))),
+          SizedBox(width: 96, child: _buildEditableCell(sub, 'startTime', true)),
+          SizedBox(width: 96, child: _buildEditableCell(sub, 'endTime', true)),
+          Expanded(child: _buildEditableCell(sub, 'text', false)),
+          Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
             SizedBox(
               width: 96,
               child: Row(
@@ -680,7 +699,6 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -700,7 +718,10 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           : TextField(controller: _editController, focusNode: _focusNode, maxLines: null, style: const TextStyle(fontSize: 14), decoration: InputDecoration(isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8), border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: const BorderSide(color: Colors.blue)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: const BorderSide(color: Colors.blue)), filled: true, fillColor: const Color(0xFF1E2433)), onTapOutside: (_) => _stopEditing());
     }
     return GestureDetector(
-      onTap: () => _startEditing(sub.id, field),
+      onTap: () {
+        _handleRowClick(sub.id);
+        _startEditing(sub.id, field);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: Colors.transparent)),
@@ -716,45 +737,43 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         children: [
           Expanded(
             child: Container(
-              decoration: BoxDecoration(color: const Color(0xFF1E2029), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade800)),
-              child: Stack(
-                children: [
-                  Container(decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF2D2D2D), Color(0xFF1A1A1A)]))),
-                  Center(child: Container(width: 64, height: 64, decoration: BoxDecoration(color: Colors.black.withOpacity(0.4), shape: BoxShape.circle), child: const Icon(Icons.play_arrow, size: 32, color: Colors.white))),
-                  if (_activeSubtitle != null)
-                    Positioned(
-                      left: 32, right: 32, bottom: 48,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(8)),
-                        child: Text(_previewMode == 'text' ? _activeSubtitle!.text : _activeSubtitle!.translatedText, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500), textAlign: TextAlign.center),
-                      ),
-                    ),
-                  Positioned(top: 16, right: 16, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: Colors.black.withOpacity(0.4), borderRadius: BorderRadius.circular(4)), child: const Text('FPS: 24.0', style: TextStyle(color: Colors.white54, fontSize: 12, fontFamily: 'monospace')))),
-                  Positioned(
-                    left: 0, right: 0, bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.black.withOpacity(0.4), borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12))),
-                      child: Column(
-                        children: [
-                          Container(height: 4, decoration: BoxDecoration(color: Colors.grey.shade700, borderRadius: BorderRadius.circular(2)), child: FractionallySizedBox(alignment: Alignment.centerLeft, widthFactor: _activeSubtitle != null ? _getProgressPercentage(_activeSubtitle!.startTime) / 100 : 0, child: Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(2))))),
-                          const SizedBox(height: 8),
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(_activeSubtitle?.startTime.split(',')[0].replaceFirst(RegExp(r'^00:'), '') ?? '00:00', style: const TextStyle(color: Colors.grey, fontSize: 12, fontFamily: 'monospace')), const Text('02:00', style: TextStyle(color: Colors.grey, fontSize: 12, fontFamily: 'monospace'))]),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade800)),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _videoInitialized && _videoController != null
+                    ? VideoPreview(
+                        controller: _videoController!,
+                        initialized: _videoInitialized,
+                        subtitles: _subtitles.map((item) => Subtitle(
+                          index: item.id,
+                          startTime: _parseDuration(item.startTime),
+                          endTime: _parseDuration(item.endTime),
+                          text: item.text,
+                        )).toList(),
+                      )
+                    : const Center(child: CircularProgressIndicator()),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          const Text('Preview Mode', style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 4),
-          Text('Modifications in the list update in real-time', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
         ],
       ),
     );
+  }
+
+  Duration _parseDuration(String time) {
+    final parts = time.split(':');
+    final secondParts = parts[2].split(',');
+    return Duration(
+      hours: int.parse(parts[0]),
+      minutes: int.parse(parts[1]),
+      seconds: int.parse(secondParts[0]),
+      milliseconds: secondParts.length > 1 ? int.parse(secondParts[1]) : 0,
+    );
+  }
+
+  String _formatDuration(Duration d) {
+    final m = d.inMinutes.toString().padLeft(2, '0');
+    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 }
