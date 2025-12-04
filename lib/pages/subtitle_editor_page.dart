@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/database_service.dart';
 import '../widgets/video_preview.dart';
 import '../models/subtitle.dart';
@@ -1161,6 +1162,79 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     );
   }
 
+  Future<void> _exportSubtitles(String format) async {
+    final content = format == 'SRT'
+        ? _generateSRT()
+        : format == 'VTT'
+            ? _generateVTT()
+            : _generateASS();
+    final ext = format.toLowerCase();
+    final fileName = '${widget.projectName ?? 'subtitles'}.$ext';
+
+    final outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save Subtitle File',
+      fileName: fileName,
+      type: FileType.custom,
+      allowedExtensions: [ext],
+    );
+
+    if (outputPath != null) {
+      final file = File(outputPath);
+      await file.writeAsString(content);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exported to $outputPath')),
+        );
+      }
+    }
+  }
+
+  String _generateSRT() {
+    final buffer = StringBuffer();
+    for (var i = 0; i < _subtitles.length; i++) {
+      final sub = _subtitles[i];
+      buffer.writeln(i + 1);
+      buffer.writeln(
+          '${sub.startTime.replaceAll(',', ',')} --> ${sub.endTime.replaceAll(',', ',')}');
+      buffer.writeln(sub.text);
+      buffer.writeln();
+    }
+    return buffer.toString();
+  }
+
+  String _generateVTT() {
+    final buffer = StringBuffer('WEBVTT\n\n');
+    for (var i = 0; i < _subtitles.length; i++) {
+      final sub = _subtitles[i];
+      buffer.writeln(
+          '${sub.startTime.replaceAll(',', '.')} --> ${sub.endTime.replaceAll(',', '.')}');
+      buffer.writeln(sub.text);
+      buffer.writeln();
+    }
+    return buffer.toString();
+  }
+
+  String _generateASS() {
+    final buffer = StringBuffer();
+    buffer.writeln('[Script Info]');
+    buffer.writeln('Title: ${widget.projectName ?? 'Subtitles'}');
+    buffer.writeln('ScriptType: v4.00+');
+    buffer.writeln('\n[V4+ Styles]');
+    buffer.writeln(
+        'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding');
+    buffer.writeln(
+        'Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1');
+    buffer.writeln('\n[Events]');
+    buffer.writeln(
+        'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text');
+    for (var sub in _subtitles) {
+      final start = sub.startTime.replaceAll(',', '.').substring(0, 10);
+      final end = sub.endTime.replaceAll(',', '.').substring(0, 10);
+      buffer.writeln('Dialogue: 0,$start,$end,Default,,0,0,0,,${sub.text}');
+    }
+    return buffer.toString();
+  }
+
   void _showExportDialog() {
     String selectedFormat = 'SRT';
     bool mergeToVideo = false;
@@ -1170,7 +1244,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => Dialog(
           backgroundColor: const Color(0xFF161d2c),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Container(
             width: 480,
             decoration: BoxDecoration(
@@ -1183,14 +1258,23 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.1))),
+                    border: Border(
+                        bottom:
+                            BorderSide(color: Colors.white.withOpacity(0.1))),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Export Options', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                      const Text('Export Options',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
                       const SizedBox(height: 4),
-                      Text('Select the format and merge options for your subtitles.', style: TextStyle(fontSize: 14, color: Colors.grey.shade400)),
+                      Text(
+                          'Select the format and merge options for your subtitles.',
+                          style: TextStyle(
+                              fontSize: 14, color: Colors.grey.shade400)),
                     ],
                   ),
                 ),
@@ -1201,113 +1285,200 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                     children: [
                       const Padding(
                         padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: Text('Format', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                        child: Text('Format',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         child: Container(
                           height: 40,
-                          decoration: BoxDecoration(color: const Color(0xFF101622), borderRadius: BorderRadius.circular(8)),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFF101622),
+                              borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.all(4),
                           child: Row(
-                            children: ['SRT', 'VTT', 'ASS'].map((format) => Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => selectedFormat = format),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: selectedFormat == format ? const Color(0xFF2c3752) : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(format, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: selectedFormat == format ? Colors.white : Colors.grey.shade400)),
-                                ),
-                              ),
-                            )).toList(),
+                            children: ['SRT', 'VTT', 'ASS']
+                                .map((format) => Expanded(
+                                      child: GestureDetector(
+                                        onTap: () => setState(
+                                            () => selectedFormat = format),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: selectedFormat == format
+                                                ? const Color(0xFF2c3752)
+                                                : Colors.transparent,
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(format,
+                                              style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: selectedFormat ==
+                                                          format
+                                                      ? Colors.white
+                                                      : Colors.grey.shade400)),
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
                           ),
                         ),
                       ),
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: Text('Select Export Language', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Column(
-                          children: [
-                            Container(
-                              height: 36,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: const Color(0xFF324467)),
-                                borderRadius: BorderRadius.circular(8),
-                                color: const Color(0xFF101622),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: 'original',
-                                  isExpanded: true,
-                                  dropdownColor: const Color(0xFF1E1E2E),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  icon: Icon(Icons.expand_more, size: 20, color: Colors.grey.shade400),
-                                  items: const [
-                                    DropdownMenuItem(value: 'original', child: Text('Original Language (English)', style: TextStyle(fontSize: 13, color: Colors.white))),
-                                    DropdownMenuItem(value: 'translation1', child: Text('Translated Language 1 (Spanish)', style: TextStyle(fontSize: 13, color: Colors.white))),
-                                    DropdownMenuItem(value: 'translation2', child: Text('Translated Language 2 (French)', style: TextStyle(fontSize: 13, color: Colors.white))),
-                                  ],
-                                  onChanged: (v) {},
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Container(
-                              height: 36,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: const Color(0xFF324467)),
-                                borderRadius: BorderRadius.circular(8),
-                                color: const Color(0xFF101622),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: 'none',
-                                  isExpanded: true,
-                                  dropdownColor: const Color(0xFF1E1E2E),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  icon: Icon(Icons.expand_more, size: 20, color: Colors.grey.shade400),
-                                  items: const [
-                                    DropdownMenuItem(value: 'none', child: Text('None', style: TextStyle(fontSize: 13, color: Colors.white))),
-                                    DropdownMenuItem(value: 'original', child: Text('Original Language (English)', style: TextStyle(fontSize: 13, color: Colors.white))),
-                                    DropdownMenuItem(value: 'translation1', child: Text('Translated Language 1 (Spanish)', style: TextStyle(fontSize: 13, color: Colors.white))),
-                                    DropdownMenuItem(value: 'translation2', child: Text('Translated Language 2 (French)', style: TextStyle(fontSize: 13, color: Colors.white))),
-                                  ],
-                                  onChanged: (v) {},
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: Text('Video Output', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: mergeToVideo,
-                              onChanged: (v) => setState(() => mergeToVideo = v ?? false),
-                              fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? const Color(0xFF135bec) : Colors.transparent),
-                              side: BorderSide(color: Colors.grey.shade700, width: 2),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('Merge subtitles into original video', style: TextStyle(fontSize: 14, color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        child: Text('This option is only available for local video files.', style: TextStyle(fontSize: 12, color: Colors.grey.shade400)),
-                      ),
+                      // const Padding(
+                      //   padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      //   child: Text('Select Export Language',
+                      //       style: TextStyle(
+                      //           fontSize: 16,
+                      //           fontWeight: FontWeight.bold,
+                      //           color: Colors.white)),
+                      // ),
+                      // Padding(
+                      //   padding: const EdgeInsets.symmetric(
+                      //       horizontal: 16, vertical: 12),
+                      //   child: Column(
+                      //     children: [
+                      //       Container(
+                      //         height: 36,
+                      //         decoration: BoxDecoration(
+                      //           border:
+                      //               Border.all(color: const Color(0xFF324467)),
+                      //           borderRadius: BorderRadius.circular(8),
+                      //           color: const Color(0xFF101622),
+                      //         ),
+                      //         child: DropdownButtonHideUnderline(
+                      //           child: DropdownButton<String>(
+                      //             value: 'original',
+                      //             isExpanded: true,
+                      //             dropdownColor: const Color(0xFF1E1E2E),
+                      //             padding: const EdgeInsets.symmetric(
+                      //                 horizontal: 12),
+                      //             icon: Icon(Icons.expand_more,
+                      //                 size: 20, color: Colors.grey.shade400),
+                      //             items: const [
+                      //               DropdownMenuItem(
+                      //                   value: 'original',
+                      //                   child: Text(
+                      //                       'Original Language (English)',
+                      //                       style: TextStyle(
+                      //                           fontSize: 13,
+                      //                           color: Colors.white))),
+                      //               DropdownMenuItem(
+                      //                   value: 'translation1',
+                      //                   child: Text(
+                      //                       'Translated Language 1 (Spanish)',
+                      //                       style: TextStyle(
+                      //                           fontSize: 13,
+                      //                           color: Colors.white))),
+                      //               DropdownMenuItem(
+                      //                   value: 'translation2',
+                      //                   child: Text(
+                      //                       'Translated Language 2 (French)',
+                      //                       style: TextStyle(
+                      //                           fontSize: 13,
+                      //                           color: Colors.white))),
+                      //             ],
+                      //             onChanged: (v) {},
+                      //           ),
+                      //         ),
+                      //       ),
+                      //       const SizedBox(height: 12),
+                      //       Container(
+                      //         height: 36,
+                      //         decoration: BoxDecoration(
+                      //           border:
+                      //               Border.all(color: const Color(0xFF324467)),
+                      //           borderRadius: BorderRadius.circular(8),
+                      //           color: const Color(0xFF101622),
+                      //         ),
+                      //         child: DropdownButtonHideUnderline(
+                      //           child: DropdownButton<String>(
+                      //             value: 'none',
+                      //             isExpanded: true,
+                      //             dropdownColor: const Color(0xFF1E1E2E),
+                      //             padding: const EdgeInsets.symmetric(
+                      //                 horizontal: 12),
+                      //             icon: Icon(Icons.expand_more,
+                      //                 size: 20, color: Colors.grey.shade400),
+                      //             items: const [
+                      //               DropdownMenuItem(
+                      //                   value: 'none',
+                      //                   child: Text('None',
+                      //                       style: TextStyle(
+                      //                           fontSize: 13,
+                      //                           color: Colors.white))),
+                      //               DropdownMenuItem(
+                      //                   value: 'original',
+                      //                   child: Text(
+                      //                       'Original Language (English)',
+                      //                       style: TextStyle(
+                      //                           fontSize: 13,
+                      //                           color: Colors.white))),
+                      //               DropdownMenuItem(
+                      //                   value: 'translation1',
+                      //                   child: Text(
+                      //                       'Translated Language 1 (Spanish)',
+                      //                       style: TextStyle(
+                      //                           fontSize: 13,
+                      //                           color: Colors.white))),
+                      //               DropdownMenuItem(
+                      //                   value: 'translation2',
+                      //                   child: Text(
+                      //                       'Translated Language 2 (French)',
+                      //                       style: TextStyle(
+                      //                           fontSize: 13,
+                      //                           color: Colors.white))),
+                      //             ],
+                      //             onChanged: (v) {},
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
+                      // const Padding(
+                      //   padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      //   child: Text('Video Output',
+                      //       style: TextStyle(
+                      //           fontSize: 16,
+                      //           fontWeight: FontWeight.bold,
+                      //           color: Colors.white)),
+                      // ),
+                      // Padding(
+                      //   padding: const EdgeInsets.symmetric(horizontal: 16),
+                      //   child: Row(
+                      //     children: [
+                      //       Checkbox(
+                      //         value: mergeToVideo,
+                      //         onChanged: (v) =>
+                      //             setState(() => mergeToVideo = v ?? false),
+                      //         fillColor: WidgetStateProperty.resolveWith(
+                      //             (states) =>
+                      //                 states.contains(WidgetState.selected)
+                      //                     ? const Color(0xFF135bec)
+                      //                     : Colors.transparent),
+                      //         side: BorderSide(
+                      //             color: Colors.grey.shade700, width: 2),
+                      //       ),
+                      //       const SizedBox(width: 8),
+                      //       const Text('Merge subtitles into original video',
+                      //           style: TextStyle(
+                      //               fontSize: 14, color: Colors.white)),
+                      //     ],
+                      //   ),
+                      // ),
+                      // Padding(
+                      //   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      //   child: Text(
+                      //       'This option is only available for local video files.',
+                      //       style: TextStyle(
+                      //           fontSize: 12, color: Colors.grey.shade400)),
+                      // ),
                     ],
                   ),
                 ),
@@ -1315,24 +1486,36 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color(0xFF111722).withOpacity(0.6),
-                    border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
-                    borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(12), bottomRight: Radius.circular(12)),
+                    border: Border(
+                        top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                    borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(12),
+                        bottomRight: Radius.circular(12)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                        child: const Text('Cancel',
+                            style: TextStyle(color: Colors.white)),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          // TODO: Implement export logic
+                          _exportSubtitles(selectedFormat);
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF135bec), padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
-                        child: Text(mergeToVideo ? 'Export & Merge' : 'Export', style: const TextStyle(fontWeight: FontWeight.w500)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF135bec),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                        ),
+                        child: Text(mergeToVideo ? 'Export & Merge' : 'Export',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white)),
                       ),
                     ],
                   ),
