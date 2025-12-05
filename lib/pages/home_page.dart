@@ -162,6 +162,126 @@ class _HomePageState extends State<HomePage> {
     return filtered;
   }
 
+  void _showSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF101622),
+        child: Container(
+          width: 800,
+          constraints: const BoxConstraints(maxHeight: 700),
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(48),
+                  child: Column(
+                    children: [
+                      Container(
+                    height: 96,
+                    width: 96,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B).withOpacity(0.5),
+                      border: Border.all(color: const Color(0xFF334155).withOpacity(0.8)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(Icons.subtitles, size: 48, color: Color(0xFF135BEC)),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text('MacWhisper',
+                      style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, letterSpacing: -2)),
+                  const SizedBox(height: 8),
+                  const Text('Version 1.0.0', style: TextStyle(color: Colors.grey, fontSize: 18)),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'A powerful macOS app for effortless subtitle extraction, editing, and translation from any audio or video source.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 16, height: 1.5),
+                  ),
+                  const SizedBox(height: 48),
+                  const Text('Core Features',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 24),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 1.2,
+                    children: [
+                      _buildFeatureCard(Icons.movie, 'Smart Extraction',
+                          'Automatically generate accurate subtitles from audio and video files.', true),
+                      _buildFeatureCard(Icons.edit_square, 'Intuitive Editing',
+                          'Easily proofread, modify timings, and edit text content.', true),
+                      _buildFeatureCard(Icons.desktop_mac, 'Native macOS Feel',
+                          'A clean and fluid interface that perfectly integrates with macOS.', true),
+                      _buildFeatureCard(Icons.merge_type, 'Video Merging',
+                          'Seamlessly merge your finished subtitles back into the original video.', false),
+                      _buildFeatureCard(Icons.link, 'URL Support',
+                          'Extract content directly from web links to simplify your workflow.', false),
+                      _buildFeatureCard(Icons.translate, 'One-Click Translation',
+                          'Instantly translate your subtitles into multiple languages.', false),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  Container(
+                    padding: const EdgeInsets.only(top: 24),
+                    decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: Colors.grey.shade800)),
+                    ),
+                    child: const Text('© 2024 The MacWhisper Team. All Rights Reserved.',
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 16,
+            right: 16,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.grey),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard(IconData icon, String title, String description, bool enabled) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F172A).withOpacity(0.7),
+        border: Border.all(color: const Color(0xFF1E293B)),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 32, color: enabled ? const Color(0xFF135BEC) : Colors.grey.shade700),
+          const SizedBox(height: 12),
+          Text(title,
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: enabled ? const Color(0xFFF1F5F9) : Colors.grey.shade600),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          Text(description,
+              style: TextStyle(fontSize: 11, color: enabled ? Colors.grey : Colors.grey.shade700),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
+
   Future<void> _openFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -324,11 +444,11 @@ class _HomePageState extends State<HomePage> {
             children: [
               IconButton(
                   icon: const Icon(Icons.refresh, color: Colors.grey, size: 18),
-                  onPressed: () {}),
+                  onPressed: _loadProjects),
               IconButton(
                   icon:
                       const Icon(Icons.settings, color: Colors.grey, size: 18),
-                  onPressed: () {}),
+                  onPressed: _showSettingsDialog),
             ],
           ),
           const SizedBox(height: 24),

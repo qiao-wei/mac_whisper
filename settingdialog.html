@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>About Page (Redesigned, Dark Style, English Content, Concise Description) - MacWhisper</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50vh;
+            background: radial-gradient(circle at 50% 0, rgba(19, 91, 236, 0.15) 0%, rgba(16, 22, 34, 0) 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-display bg-background-dark text-slate-300">
+<div class="relative flex min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<main class="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+<div class="w-full max-w-4xl mx-auto py-12 md:py-20">
+<div class="flex flex-col items-center text-center gap-16">
+<header class="flex flex-col items-center gap-6">
+<div class="flex items-center justify-center h-24 w-24 rounded-2xl bg-slate-800/50 border border-slate-700/80 shadow-lg">
+<span class="material-symbols-outlined text-6xl text-primary" style="font-variation-settings: 'wght' 200;">subtitles</span>
+</div>
+<div class="flex flex-col gap-2">
+<h1 class="text-slate-50 text-5xl md:text-6xl font-black tracking-tighter">MacWhisper</h1>
+<p class="text-slate-400 text-lg">Version 1.0.0</p>
+</div>
+<p class="max-w-xl text-slate-300 text-lg leading-relaxed">
+                            A powerful macOS app for effortless subtitle extraction, editing, and translation from any audio or video source.
+                        </p>
+</header>
+<section class="w-full flex flex-col items-center gap-8">
+<h2 class="text-slate-100 text-3xl font-bold tracking-tight">Core Features</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+<div class="flex flex-col items-center text-center gap-4 rounded-xl bg-slate-900/70 border border-slate-800 p-6">
+<span class="material-symbols-outlined text-4xl text-primary">movie</span>
+<h3 class="text-slate-100 text-lg font-semibold">Smart Extraction</h3>
+<p class="text-slate-400 text-sm leading-normal">Automatically generate accurate subtitles from audio and video files.</p>
+</div>
+<div class="flex flex-col items-center text-center gap-4 rounded-xl bg-slate-900/70 border border-slate-800 p-6">
+<span class="material-symbols-outlined text-4xl text-primary">edit_square</span>
+<h3 class="text-slate-100 text-lg font-semibold">Intuitive Editing</h3>
+<p class="text-slate-400 text-sm leading-normal">Easily proofread, modify timings, and edit text content.</p>
+</div>
+<div class="flex flex-col items-center text-center gap-4 rounded-xl bg-slate-900/70 border border-slate-800 p-6">
+<span class="material-symbols-outlined text-4xl text-primary">desktop_mac</span>
+<h3 class="text-slate-100 text-lg font-semibold">Native macOS Feel</h3>
+<p class="text-slate-400 text-sm leading-normal">A clean and fluid interface that perfectly integrates with macOS.</p>
+</div>
+<div class="flex flex-col items-center text-center gap-4 rounded-xl bg-slate-900/70 border border-slate-800 p-6 opacity-50">
+<span class="material-symbols-outlined text-4xl text-slate-600">merge_type</span>
+<h3 class="text-slate-500 text-lg font-semibold">Video Merging</h3>
+<p class="text-slate-500 text-sm leading-normal">Seamlessly merge your finished subtitles back into the original video.</p>
+</div>
+<div class="flex flex-col items-center text-center gap-4 rounded-xl bg-slate-900/70 border border-slate-800 p-6 opacity-50">
+<span class="material-symbols-outlined text-4xl text-slate-600">link</span>
+<h3 class="text-slate-500 text-lg font-semibold">URL Support</h3>
+<p class="text-slate-500 text-sm leading-normal">Extract content directly from web links to simplify your workflow.</p>
+</div>
+<div class="flex flex-col items-center text-center gap-4 rounded-xl bg-slate-900/70 border border-slate-800 p-6 opacity-50">
+<span class="material-symbols-outlined text-4xl text-slate-600">translate</span>
+<h3 class="text-slate-500 text-lg font-semibold">One-Click Translation</h3>
+<p class="text-slate-500 text-sm leading-normal">Instantly translate your subtitles into multiple languages.</p>
+</div>
+</div>
+</section>
+<footer class="flex flex-col items-center border-t border-slate-800 pt-10 w-full max-w-xl">
+<p class="text-slate-500 text-sm">© 2024 The MacWhisper Team. All Rights Reserved.</p>
+</footer>
+</div>
+</div>
+</main>
+</div>
+</body></html>
