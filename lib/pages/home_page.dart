@@ -257,23 +257,16 @@ class _HomePageState extends State<HomePage> {
                   height: 40,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        colors: [Color(0xFFFB923C), Color(0xFFEC4899)]),
-                    borderRadius: BorderRadius.circular(20),
+                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child:
-                      const Icon(Icons.person, color: Colors.white, size: 20),
+                      const Icon(Icons.mic, color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('CaptionPro',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 18)),
-                    Text('Welcome Back',
-                        style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
-                ),
+                const Text('MacWhisper',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 18)),
               ],
             ),
           ),
