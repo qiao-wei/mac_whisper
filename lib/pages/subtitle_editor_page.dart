@@ -720,14 +720,14 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                           fontWeight: FontWeight.w600, fontSize: 18)),
                 ),
           const Spacer(),
-          ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
-              child: const Text('Merge to Video',
-                  style: TextStyle(fontWeight: FontWeight.w500))),
+          // ElevatedButton(
+          //     onPressed: () {},
+          //     style: ElevatedButton.styleFrom(
+          //         backgroundColor: const Color(0xFF2563EB),
+          //         padding:
+          //             const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+          //     child: const Text('Merge to Video',
+          //         style: TextStyle(fontWeight: FontWeight.w500))),
           const SizedBox(width: 12),
           OutlinedButton(
               onPressed: _showExportDialog,
@@ -735,8 +735,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   side: BorderSide(color: Colors.grey.shade600),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
-              child: const Text('Export Subtitles',
-                  style: TextStyle(color: Colors.grey))),
+              child:
+                  const Text('Export', style: TextStyle(color: Colors.grey))),
         ],
       ),
     );
