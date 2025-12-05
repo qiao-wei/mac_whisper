@@ -62,6 +62,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   final List<List<SubtitleItem>> _redoStack = [];
   VideoPlayerController? _videoController;
   bool _videoInitialized = false;
+  int? _hoveredRowId;
 
   List<SubtitleItem> _subtitles = [];
 
@@ -979,19 +980,25 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildSubtitleRow(SubtitleItem sub, int index) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: BoxDecoration(
-        color: sub.selected ? const Color(0xFF111C30) : null,
-        border: Border(
-            left: BorderSide(
-                color: sub.selected ? Colors.blue : Colors.transparent,
-                width: 2),
-            bottom: BorderSide(color: Colors.grey.shade800.withOpacity(0.5))),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hoveredRowId = sub.id),
+      onExit: (_) => setState(() => _hoveredRowId = null),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: sub.selected
+              ? const Color(0xFF111C30)
+              : (_hoveredRowId == sub.id ? const Color(0xFF0D1420) : null),
+          border: Border(
+              left: BorderSide(
+                  color: sub.selected ? Colors.blue : Colors.transparent,
+                  width: 2),
+              bottom: BorderSide(color: Colors.grey.shade800.withOpacity(0.5))),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           SizedBox(
               width: 40,
               child: Checkbox(
@@ -1031,6 +1038,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
