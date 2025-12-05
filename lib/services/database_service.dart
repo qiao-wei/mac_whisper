@@ -16,11 +16,14 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     final path = join(await getDatabasesPath(), 'uf_app.db');
-    return openDatabase(path, version: 2, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    return openDatabase(path, version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Migration handled - columns already exist in schema
+    if (oldVersion < 3) {
+      await db.execute('ALTER TABLE projects ADD COLUMN modified_at INTEGER');
+      await db.execute('UPDATE projects SET modified_at = created_at WHERE modified_at IS NULL');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -30,6 +33,7 @@ class DatabaseService {
         name TEXT NOT NULL,
         status INTEGER NOT NULL,
         created_at INTEGER NOT NULL,
+        modified_at INTEGER NOT NULL,
         video_path TEXT,
         thumbnail_path TEXT
       )
@@ -63,12 +67,13 @@ class DatabaseService {
 
   Future<List<Project>> getProjects() async {
     final db = await database;
-    final maps = await db.query('projects', orderBy: 'created_at DESC');
+    final maps = await db.query('projects', orderBy: 'modified_at DESC');
     return maps.map((m) => Project(
       id: m['id'] as String,
       name: m['name'] as String,
       status: ProjectStatus.values[m['status'] as int],
       createdAt: DateTime.fromMillisecondsSinceEpoch(m['created_at'] as int),
+      modifiedAt: DateTime.fromMillisecondsSinceEpoch(m['modified_at'] as int),
       videoPath: m['video_path'] as String?,
       thumbnailPath: m['thumbnail_path'] as String?,
     )).toList();
@@ -81,6 +86,7 @@ class DatabaseService {
       'name': p.name,
       'status': p.status.index,
       'created_at': p.createdAt.millisecondsSinceEpoch,
+      'modified_at': p.modifiedAt.millisecondsSinceEpoch,
       'video_path': p.videoPath,
       'thumbnail_path': p.thumbnailPath,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
@@ -88,9 +94,11 @@ class DatabaseService {
 
   Future<void> updateProject(Project p) async {
     final db = await database;
+    p.modifiedAt = DateTime.now();
     await db.update('projects', {
       'name': p.name,
       'status': p.status.index,
+      'modified_at': p.modifiedAt.millisecondsSinceEpoch,
       'video_path': p.videoPath,
       'thumbnail_path': p.thumbnailPath,
     }, where: 'id = ?', whereArgs: [p.id]);

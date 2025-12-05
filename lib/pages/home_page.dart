@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
+import 'package:video_player/video_player.dart';
 import 'dart:ui' as ui;
 import '../models/project.dart';
 import '../services/database_service.dart';
@@ -19,14 +21,18 @@ class _DashedBorderPainter extends CustomPainter {
       ..color = color
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
-    final path = Path()..addRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, size.width, size.height), Radius.circular(radius)));
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Radius.circular(radius)));
     final dashPath = Path();
     const dashWidth = 8.0;
     const dashSpace = 6.0;
     for (final metric in path.computeMetrics()) {
       double distance = 0;
       while (distance < metric.length) {
-        dashPath.addPath(metric.extractPath(distance, distance + dashWidth), Offset.zero);
+        dashPath.addPath(
+            metric.extractPath(distance, distance + dashWidth), Offset.zero);
         distance += dashWidth + dashSpace;
       }
     }
@@ -53,16 +59,29 @@ class _HomePageState extends State<HomePage> {
   List<Project> _projects = [];
   bool _isLoading = true;
   bool _isDragging = false;
+  String _sortBy = 'modified';
+  bool _sortAsc = false;
 
   @override
   void initState() {
     super.initState();
     _loadProjects();
+    _loadSortPreference();
+  }
+
+  Future<void> _loadSortPreference() async {
+    final sort = await _db.getConfig('sort_by');
+    final asc = await _db.getConfig('sort_asc');
+    if (sort != null) setState(() => _sortBy = sort);
+    if (asc != null) setState(() => _sortAsc = asc == 'true');
   }
 
   Future<void> _loadProjects() async {
     final projects = await _db.getProjects();
-    setState(() { _projects = projects; _isLoading = false; });
+    setState(() {
+      _projects = projects;
+      _isLoading = false;
+    });
   }
 
   Future<void> _updateProject(Project p) async {
@@ -77,8 +96,13 @@ class _HomePageState extends State<HomePage> {
         title: const Text('Delete Project'),
         content: Text('Delete "${p.name}"?'),
         actions: [
-          CupertinoDialogAction(child: const Text('Cancel'), onPressed: () => Navigator.pop(ctx, false)),
-          CupertinoDialogAction(isDestructiveAction: true, child: const Text('Delete'), onPressed: () => Navigator.pop(ctx, true)),
+          CupertinoDialogAction(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(ctx, false)),
+          CupertinoDialogAction(
+              isDestructiveAction: true,
+              child: const Text('Delete'),
+              onPressed: () => Navigator.pop(ctx, true)),
         ],
       ),
     );
@@ -93,19 +117,49 @@ class _HomePageState extends State<HomePage> {
     final path = file.path;
     final name = file.name;
     final ext = name.split('.').last.toLowerCase();
-    if (!['mp4', 'mov', 'mp3', 'wav', 'avi', 'mkv', 'm4a'].contains(ext)) return;
-    final project = Project(id: DateTime.now().millisecondsSinceEpoch.toString(), name: name, status: ProjectStatus.inProgress, createdAt: DateTime.now(), videoPath: path);
+    if (!['mp4', 'mov', 'mp3', 'wav', 'avi', 'mkv', 'm4a'].contains(ext))
+      return;
+    final project = Project(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: name,
+        status: ProjectStatus.inProgress,
+        createdAt: DateTime.now(),
+        videoPath: path);
     await _db.insertProject(project);
     setState(() => _projects.insert(0, project));
-    if (mounted) _openSubtitleEditor(projectId: project.id, projectName: project.name);
+    if (mounted)
+      _openSubtitleEditor(projectId: project.id, projectName: project.name);
   }
 
   List<Project> get _filteredProjects {
-    return _projects.where((p) {
-      if (_activeTab == 'In Progress') return p.status == ProjectStatus.inProgress;
-      if (_activeTab == 'Completed') return p.status == ProjectStatus.completed;
-      return true;
-    }).where((p) => p.name.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+    var filtered = _projects
+        .where((p) {
+          if (_activeTab == 'In Progress')
+            return p.status == ProjectStatus.inProgress;
+          if (_activeTab == 'Completed')
+            return p.status == ProjectStatus.completed;
+          return true;
+        })
+        .where((p) => p.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+
+    filtered.sort((a, b) {
+      int result;
+      switch (_sortBy) {
+        case 'name':
+          result = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+          break;
+        case 'created':
+          result = b.createdAt.compareTo(a.createdAt);
+          break;
+        case 'modified':
+        default:
+          result = b.modifiedAt.compareTo(a.modifiedAt);
+      }
+      return _sortAsc ? -result : result;
+    });
+
+    return filtered;
   }
 
   Future<void> _openFile() async {
@@ -115,10 +169,16 @@ class _HomePageState extends State<HomePage> {
     );
     if (result != null && result.files.isNotEmpty && mounted) {
       final file = result.files.single;
-      final project = Project(id: DateTime.now().millisecondsSinceEpoch.toString(), name: file.name, status: ProjectStatus.inProgress, createdAt: DateTime.now(), videoPath: file.path);
+      final project = Project(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: file.name,
+          status: ProjectStatus.inProgress,
+          createdAt: DateTime.now(),
+          videoPath: file.path);
       await _db.insertProject(project);
       setState(() => _projects.insert(0, project));
-      if (mounted) _openSubtitleEditor(projectId: project.id, projectName: project.name);
+      if (mounted)
+        _openSubtitleEditor(projectId: project.id, projectName: project.name);
     }
   }
 
@@ -138,7 +198,9 @@ class _HomePageState extends State<HomePage> {
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       width: _isRightPanelOpen ? 450 : 0,
-                      decoration: BoxDecoration(border: Border(left: BorderSide(color: Colors.grey.shade800))),
+                      decoration: BoxDecoration(
+                          border: Border(
+                              left: BorderSide(color: Colors.grey.shade800))),
                       child: _isRightPanelOpen ? _buildNewProjectPanel() : null,
                     ),
                   ],
@@ -151,7 +213,8 @@ class _HomePageState extends State<HomePage> {
                     child: MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: GestureDetector(
-                        onTap: () => setState(() => _isRightPanelOpen = !_isRightPanelOpen),
+                        onTap: () => setState(
+                            () => _isRightPanelOpen = !_isRightPanelOpen),
                         child: Container(
                           width: 28,
                           height: 28,
@@ -160,7 +223,12 @@ class _HomePageState extends State<HomePage> {
                             border: Border.all(color: Colors.grey.shade700),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(_isRightPanelOpen ? Icons.chevron_right : Icons.chevron_left, size: 16, color: Colors.grey),
+                          child: Icon(
+                              _isRightPanelOpen
+                                  ? Icons.chevron_right
+                                  : Icons.chevron_left,
+                              size: 16,
+                              color: Colors.grey),
                         ),
                       ),
                     ),
@@ -188,17 +256,22 @@ class _HomePageState extends State<HomePage> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFFB923C), Color(0xFFEC4899)]),
+                    gradient: const LinearGradient(
+                        colors: [Color(0xFFFB923C), Color(0xFFEC4899)]),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 20),
+                  child:
+                      const Icon(Icons.person, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('CaptionPro', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    Text('Welcome Back', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text('CaptionPro',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18)),
+                    Text('Welcome Back',
+                        style: TextStyle(color: Colors.grey, fontSize: 12)),
                   ],
                 ),
               ],
@@ -211,7 +284,8 @@ class _HomePageState extends State<HomePage> {
           const Spacer(),
           const Padding(
             padding: EdgeInsets.all(16),
-            child: Text('v2.4.0', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            child: Text('v2.4.0',
+                style: TextStyle(color: Colors.grey, fontSize: 12)),
           ),
         ],
       ),
@@ -233,9 +307,13 @@ class _HomePageState extends State<HomePage> {
           ),
           child: Row(
             children: [
-              Icon(icon, size: 20, color: isActive ? Colors.white : Colors.grey),
+              Icon(icon,
+                  size: 20, color: isActive ? Colors.white : Colors.grey),
               const SizedBox(width: 12),
-              Text(name, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontWeight: FontWeight.w500)),
+              Text(name,
+                  style: TextStyle(
+                      color: isActive ? Colors.white : Colors.grey,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
         ),
@@ -251,26 +329,37 @@ class _HomePageState extends State<HomePage> {
         children: [
           Row(
             children: [
-              IconButton(icon: const Icon(Icons.refresh, color: Colors.grey, size: 18), onPressed: () {}),
-              IconButton(icon: const Icon(Icons.settings, color: Colors.grey, size: 18), onPressed: () {}),
+              IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.grey, size: 18),
+                  onPressed: () {}),
+              IconButton(
+                  icon:
+                      const Icon(Icons.settings, color: Colors.grey, size: 18),
+                  onPressed: () {}),
             ],
           ),
           const SizedBox(height: 24),
-          Text(_activeTab, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+          Text(_activeTab,
+              style:
+                  const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
           const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: Container(
                   height: 44,
-                  decoration: BoxDecoration(color: const Color(0xFF13161F), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade800)),
+                  decoration: BoxDecoration(
+                      color: const Color(0xFF13161F),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade800)),
                   child: TextField(
                     onChanged: (v) => setState(() => _searchQuery = v),
                     style: const TextStyle(fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'Search projects by name...',
                       hintStyle: TextStyle(color: Colors.grey),
-                      prefixIcon: Icon(Icons.search, size: 18, color: Colors.grey),
+                      prefixIcon:
+                          Icon(Icons.search, size: 18, color: Colors.grey),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -278,16 +367,80 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(width: 16),
-              Container(
-                height: 44,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(color: const Color(0xFF13161F), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade800)),
-                child: const Row(
-                  children: [
-                    Text('Sort by: Last Modified', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                    SizedBox(width: 8),
-                    Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey),
-                  ],
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() => _sortAsc = !_sortAsc);
+                    _db.setConfig('sort_asc', _sortAsc.toString());
+                  },
+                  child: Container(
+                    height: 44,
+                    width: 44,
+                    decoration: BoxDecoration(
+                        color: const Color(0xFF13161F),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade800)),
+                    child: Icon(
+                        _sortAsc ? Icons.arrow_upward : Icons.arrow_downward,
+                        size: 18,
+                        color: Colors.grey),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Builder(
+                  builder: (context) => GestureDetector(
+                    onTap: () async {
+                      final box = context.findRenderObject() as RenderBox;
+                      final offset = box.localToGlobal(Offset.zero);
+                      final result = await showMenu<String>(
+                        context: context,
+                        position: RelativeRect.fromLTRB(
+                            offset.dx, offset.dy + box.size.height, offset.dx + box.size.width, 0),
+                        color: const Color(0xFF1F2430),
+                        items: [
+                          const PopupMenuItem(
+                              value: 'modified',
+                              child: Text('Last Modified',
+                                  style: TextStyle(color: Colors.white))),
+                          const PopupMenuItem(
+                              value: 'created',
+                              child: Text('Creation Time',
+                                  style: TextStyle(color: Colors.white))),
+                          const PopupMenuItem(
+                              value: 'name',
+                              child: Text('Name',
+                                  style: TextStyle(color: Colors.white))),
+                        ],
+                      );
+                      if (result != null) {
+                        setState(() => _sortBy = result);
+                        await _db.setConfig('sort_by', result);
+                      }
+                    },
+                    child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                        color: const Color(0xFF13161F),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade800)),
+                    child: Row(
+                      children: [
+                        Text(
+                            'Sort by: ${_sortBy == 'modified' ? 'Last Modified' : _sortBy == 'created' ? 'Creation Time' : 'Name'}',
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.grey)),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.keyboard_arrow_down,
+                            size: 16, color: Colors.grey),
+                      ],
+                    ),
+                  ),
+                  ),
                 ),
               ),
             ],
@@ -304,11 +457,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _openSubtitleEditor({String? projectId, String? projectName}) async {
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => SubtitleEditorPage(projectId: projectId, projectName: projectName)));
+  Future<void> _openSubtitleEditor(
+      {String? projectId, String? projectName}) async {
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (_) => SubtitleEditorPage(
+                projectId: projectId, projectName: projectName)));
     if (mounted) {
       final projects = await _db.getProjects();
-      print('Reloaded ${projects.length} projects: ${projects.map((p) => p.name).toList()}');
+      print(
+          'Reloaded ${projects.length} projects: ${projects.map((p) => p.name).toList()}');
       setState(() => _projects = projects);
     }
   }
@@ -318,10 +477,14 @@ class _HomePageState extends State<HomePage> {
       key: ValueKey(project.id),
       project: project,
       isSelected: _selectedProjectId == project.id,
-      onTap: () => setState(() => _selectedProjectId = _selectedProjectId == project.id ? null : project.id),
-      onDoubleTap: () => _openSubtitleEditor(projectId: project.id, projectName: project.name),
+      onTap: () => setState(() => _selectedProjectId =
+          _selectedProjectId == project.id ? null : project.id),
+      onDoubleTap: () =>
+          _openSubtitleEditor(projectId: project.id, projectName: project.name),
       onStatusToggle: () {
-        project.status = project.status == ProjectStatus.completed ? ProjectStatus.inProgress : ProjectStatus.completed;
+        project.status = project.status == ProjectStatus.completed
+            ? ProjectStatus.inProgress
+            : ProjectStatus.completed;
         _updateProject(project);
       },
       onNameChanged: (name) {
@@ -339,42 +502,77 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('Start a New Project', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const Text('Start a New Project',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text('Get started by uploading a file or pasting a link below', style: TextStyle(color: Colors.grey, fontSize: 14), textAlign: TextAlign.center),
+          const Text('Get started by uploading a file or pasting a link below',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+              textAlign: TextAlign.center),
           const SizedBox(height: 32),
           DropTarget(
             onDragEntered: (_) => setState(() => _isDragging = true),
             onDragExited: (_) => setState(() => _isDragging = false),
-            onDragDone: (details) { setState(() => _isDragging = false); _handleFileDrop(details); },
+            onDragDone: (details) {
+              setState(() => _isDragging = false);
+              _handleFileDrop(details);
+            },
             child: CustomPaint(
-              painter: _DashedBorderPainter(color: _isDragging ? Colors.blue : Colors.grey.shade700, radius: 20),
+              painter: _DashedBorderPainter(
+                  color: _isDragging ? Colors.blue : Colors.grey.shade700,
+                  radius: 20),
               child: Container(
                 constraints: const BoxConstraints(minHeight: 220),
                 padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(color: _isDragging ? const Color(0xFF1A2332) : const Color(0xFF13161F), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(
+                    color: _isDragging
+                        ? const Color(0xFF1A2332)
+                        : const Color(0xFF13161F),
+                    borderRadius: BorderRadius.circular(20)),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
                       width: 48,
                       height: 48,
-                      decoration: BoxDecoration(color: _isDragging ? Colors.blue.shade800 : Colors.grey.shade800, borderRadius: BorderRadius.circular(8)),
-                      child: Icon(Icons.cloud_upload_outlined, size: 24, color: _isDragging ? Colors.blue.shade200 : Colors.grey),
+                      decoration: BoxDecoration(
+                          color: _isDragging
+                              ? Colors.blue.shade800
+                              : Colors.grey.shade800,
+                          borderRadius: BorderRadius.circular(8)),
+                      child: Icon(Icons.cloud_upload_outlined,
+                          size: 24,
+                          color:
+                              _isDragging ? Colors.blue.shade200 : Colors.grey),
                     ),
                     const SizedBox(height: 16),
-                    Text(_isDragging ? 'Drop file here' : 'Drag & Drop Audio/Video File Here', style: TextStyle(fontWeight: FontWeight.w600, color: _isDragging ? Colors.blue.shade200 : Colors.grey.shade200)),
+                    Text(
+                        _isDragging
+                            ? 'Drop file here'
+                            : 'Drag & Drop Audio/Video File Here',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: _isDragging
+                                ? Colors.blue.shade200
+                                : Colors.grey.shade200)),
                     const SizedBox(height: 8),
-                    Text('Supports MP3, WAV, MP4, MOV, etc.', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                    Text('Supports MP3, WAV, MP4, MOV, etc.',
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 12)),
                     const SizedBox(height: 24),
                     MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: GestureDetector(
                         onTap: _openFile,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                          decoration: BoxDecoration(color: Colors.grey.shade800, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade700)),
-                          child: const Text('Choose File', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 8),
+                          decoration: BoxDecoration(
+                              color: Colors.grey.shade800,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade700)),
+                          child: const Text('Choose File',
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.w500)),
                         ),
                       ),
                     ),
@@ -386,20 +584,38 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: Container(height: 1, color: Colors.grey.shade800)),
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('or', style: TextStyle(color: Colors.grey))),
-              Expanded(child: Container(height: 1, color: Colors.grey.shade800)),
+              Expanded(
+                  child: Container(height: 1, color: Colors.grey.shade800)),
+              const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('or', style: TextStyle(color: Colors.grey))),
+              Expanded(
+                  child: Container(height: 1, color: Colors.grey.shade800)),
             ],
           ),
           const SizedBox(height: 24),
-          const Align(alignment: Alignment.centerLeft, child: Text('Paste Audio/Video Link', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500))),
+          const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Paste Audio/Video Link',
+                  style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500))),
           const SizedBox(height: 8),
           Container(
             height: 48,
-            decoration: BoxDecoration(color: const Color(0xFF13161F), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade700)),
+            decoration: BoxDecoration(
+                color: const Color(0xFF13161F),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade700)),
             child: const TextField(
               style: TextStyle(fontSize: 14),
-              decoration: InputDecoration(hintText: 'https://', hintStyle: TextStyle(color: Colors.grey), border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
+              decoration: InputDecoration(
+                  hintText: 'https://',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
             ),
           ),
           const SizedBox(height: 16),
@@ -408,8 +624,12 @@ class _HomePageState extends State<HomePage> {
             height: 48,
             child: ElevatedButton(
               onPressed: () => _openSubtitleEditor(),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-              child: const Text('Start Extraction', style: TextStyle(fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8))),
+              child: const Text('Start Extraction',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -426,7 +646,15 @@ class _ProjectItemWidget extends StatefulWidget {
   final VoidCallback onStatusToggle;
   final Function(String) onNameChanged;
   final VoidCallback onDelete;
-  const _ProjectItemWidget({super.key, required this.project, required this.isSelected, required this.onTap, required this.onDoubleTap, required this.onStatusToggle, required this.onNameChanged, required this.onDelete});
+  const _ProjectItemWidget(
+      {super.key,
+      required this.project,
+      required this.isSelected,
+      required this.onTap,
+      required this.onDoubleTap,
+      required this.onStatusToggle,
+      required this.onNameChanged,
+      required this.onDelete});
   @override
   State<_ProjectItemWidget> createState() => _ProjectItemWidgetState();
 }
@@ -435,11 +663,37 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
   bool _isHovered = false;
   bool _isEditingName = false;
   late TextEditingController _nameController;
+  String _fileInfo = '';
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.project.name);
+    _loadFileInfo();
+  }
+
+  Future<void> _loadFileInfo() async {
+    final path = widget.project.videoPath;
+    if (path == null) return;
+    try {
+      final file = File(path);
+      if (await file.exists()) {
+        final size = await file.length();
+        final sizeStr = size > 1024 * 1024
+            ? '${(size / (1024 * 1024)).toStringAsFixed(1)}MB'
+            : '${(size / 1024).toStringAsFixed(1)}KB';
+
+        final controller = VideoPlayerController.file(file);
+        await controller.initialize();
+        final duration = controller.value.duration;
+        final minutes = duration.inMinutes;
+        final seconds = duration.inSeconds % 60;
+        final durationStr = '$minutes:${seconds.toString().padLeft(2, '0')}';
+        controller.dispose();
+
+        setState(() => _fileInfo = 'Size: $sizeStr • Duration: $durationStr');
+      }
+    } catch (_) {}
   }
 
   @override
@@ -459,9 +713,13 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
   @override
   Widget build(BuildContext context) {
     final project = widget.project;
-    final isVideo = project.name.endsWith('.mp4') || project.name.endsWith('.mov');
-    final statusColor = project.status == ProjectStatus.completed ? Colors.green : Colors.orange;
-    final statusText = project.status == ProjectStatus.completed ? 'Completed' : 'Editing';
+    final isVideo =
+        project.name.endsWith('.mp4') || project.name.endsWith('.mov');
+    final statusColor = project.status == ProjectStatus.completed
+        ? Colors.green
+        : Colors.orange;
+    final statusText =
+        project.status == ProjectStatus.completed ? 'Completed' : 'Editing';
 
     return GestureDetector(
       onDoubleTap: widget.onDoubleTap,
@@ -473,16 +731,24 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: widget.isSelected ? const Color(0xFF1A1E29) : const Color(0xFF13161F),
+            color: widget.isSelected
+                ? const Color(0xFF1A1E29)
+                : const Color(0xFF13161F),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: widget.isSelected ? Colors.blue : (_isHovered ? Colors.grey.shade700 : Colors.transparent)),
+            border: Border.all(
+                color: widget.isSelected
+                    ? Colors.blue
+                    : (_isHovered ? Colors.grey.shade700 : Colors.transparent)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.grey.shade800.withOpacity(0.5), borderRadius: BorderRadius.circular(8)),
-                child: Icon(isVideo ? Icons.movie : Icons.music_note, color: isVideo ? Colors.blue : Colors.purple, size: 24),
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade800.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(8)),
+                child: Icon(isVideo ? Icons.movie : Icons.music_note,
+                    color: isVideo ? Colors.blue : Colors.purple, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -495,18 +761,33 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
                             child: TextField(
                               controller: _nameController,
                               autofocus: true,
-                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                              decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4), border: OutlineInputBorder()),
-                              onSubmitted: (_) { widget.onNameChanged(_nameController.text); setState(() => _isEditingName = false); },
-                              onTapOutside: (_) { widget.onNameChanged(_nameController.text); setState(() => _isEditingName = false); },
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600, fontSize: 14),
+                              decoration: const InputDecoration(
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  border: OutlineInputBorder()),
+                              onSubmitted: (_) {
+                                widget.onNameChanged(_nameController.text);
+                                setState(() => _isEditingName = false);
+                              },
+                              onTapOutside: (_) {
+                                widget.onNameChanged(_nameController.text);
+                                setState(() => _isEditingName = false);
+                              },
                             ),
                           )
                         : GestureDetector(
-                            onDoubleTap: () => setState(() => _isEditingName = true),
-                            child: Text(_nameController.text, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            onDoubleTap: () =>
+                                setState(() => _isEditingName = true),
+                            child: Text(_nameController.text,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
                           ),
                     const SizedBox(height: 4),
-                    const Text('Size: 45MB • Duration: 12:30', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text(_fileInfo,
+                        style: const TextStyle(color: Colors.grey, fontSize: 12)),
                   ],
                 ),
               ),
@@ -518,21 +799,37 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
                     child: MouseRegion(
                       cursor: SystemMouseCursors.click,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: statusColor.withOpacity(0.2))),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: statusColor.withOpacity(0.2))),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(width: 6, height: 6, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
+                            Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                    color: statusColor,
+                                    shape: BoxShape.circle)),
                             const SizedBox(width: 6),
-                            Text(statusText, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.w500)),
+                            Text(statusText,
+                                style: TextStyle(
+                                    color: statusColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500)),
                           ],
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text('${project.createdAt.month}/${project.createdAt.day}/${project.createdAt.year}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(
+                      '${project.createdAt.month}/${project.createdAt.day}/${project.createdAt.year}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
               ),
               const SizedBox(width: 12),
@@ -542,8 +839,14 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
                   onTap: widget.onDelete,
                   child: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(8)),
-                    child: Icon(Icons.delete_outline, size: 20, color: _isHovered ? Colors.red.shade400 : Colors.grey.shade600),
+                    decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(8)),
+                    child: Icon(Icons.delete_outline,
+                        size: 20,
+                        color: _isHovered
+                            ? Colors.red.shade400
+                            : Colors.grey.shade600),
                   ),
                 ),
               ),

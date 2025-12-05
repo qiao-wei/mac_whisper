@@ -6,6 +6,7 @@ class Project {
   final String? thumbnailPath;
   ProjectStatus status;
   final DateTime createdAt;
+  DateTime modifiedAt;
   final String? videoPath;
 
   Project({
@@ -14,6 +15,7 @@ class Project {
     this.thumbnailPath,
     required this.status,
     required this.createdAt,
+    DateTime? modifiedAt,
     this.videoPath,
-  });
+  }) : modifiedAt = modifiedAt ?? createdAt;
 }
