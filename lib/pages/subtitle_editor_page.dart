@@ -941,15 +941,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                         for (var s in _subtitles) s.selected = selectAll;
                       }))),
           const SizedBox(
-              width: 96,
-              child: Text('START TIME',
-                  style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600))),
-          const SizedBox(
-              width: 96,
-              child: Text('END TIME',
+              width: 120,
+              child: Text('TIME',
                   style: TextStyle(
                       color: Colors.grey,
                       fontSize: 11,
@@ -1005,8 +998,15 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   value: sub.selected,
                   onChanged: (_) => _handleCheckboxClick(index))),
           SizedBox(
-              width: 96, child: _buildEditableCell(sub, 'startTime', true)),
-          SizedBox(width: 96, child: _buildEditableCell(sub, 'endTime', true)),
+              width: 120,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildEditableCell(sub, 'startTime', true),
+                  const SizedBox(height: 4),
+                  _buildEditableCell(sub, 'endTime', true),
+                ],
+              )),
           Expanded(child: _buildEditableCell(sub, 'text', false)),
           Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
           SizedBox(
