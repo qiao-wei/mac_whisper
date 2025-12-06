@@ -1027,13 +1027,6 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                     onPressed: () {},
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints()),
-                const SizedBox(width: 8),
-                IconButton(
-                    icon: const Icon(Icons.settings, size: 16),
-                    color: Colors.grey.shade600,
-                    onPressed: () {},
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints()),
               ],
             ),
           ),
