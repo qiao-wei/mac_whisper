@@ -42,10 +42,8 @@ class SubtitleEditorPage extends StatefulWidget {
 class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   bool _showPreview = true;
   String _previewMode = 'text';
-  int? _editingId;
-  String? _editingField;
-  final _editController = TextEditingController();
-  final _focusNode = FocusNode();
+  final Map<String, TextEditingController> _cellControllers = {};
+  final Map<String, FocusNode> _cellFocusNodes = {};
   final _db = DatabaseService();
   bool _isEditingTitle = false;
   late String _title;
@@ -525,75 +523,28 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _saveSubtitles();
   }
 
-  void _startEditing(int id, String field) {
-    final sub = _subtitles.firstWhere((s) => s.id == id);
-    String value;
-    switch (field) {
-      case 'startTime':
-        value = sub.startTime;
-        break;
-      case 'endTime':
-        value = sub.endTime;
-        break;
-      case 'text':
-        value = sub.text;
-        break;
-      case 'translatedText':
-        value = sub.translatedText;
-        break;
-      default:
-        return;
+  void _saveCellValue(int id, String field, String newValue) {
+    final idx = _subtitles.indexWhere((s) => s.id == id);
+    if (idx == -1) return;
+    final oldValue = switch (field) {
+      'startTime' => _subtitles[idx].startTime,
+      'endTime' => _subtitles[idx].endTime,
+      'text' => _subtitles[idx].text,
+      'translatedText' => _subtitles[idx].translatedText,
+      _ => '',
+    };
+    if (oldValue != newValue) {
+      _pushUndo();
+      setState(() {
+        switch (field) {
+          case 'startTime': _subtitles[idx].startTime = newValue; break;
+          case 'endTime': _subtitles[idx].endTime = newValue; break;
+          case 'text': _subtitles[idx].text = newValue; break;
+          case 'translatedText': _subtitles[idx].translatedText = newValue; break;
+        }
+      });
+      _saveSubtitles();
     }
-    _editController.text = value;
-    setState(() {
-      _editingId = id;
-      _editingField = field;
-      if (field == 'translatedText')
-        _previewMode = 'translatedText';
-      else if (field == 'text') _previewMode = 'text';
-      for (var s in _subtitles) {
-        s.selected = s.id == id;
-      }
-    });
-    Future.delayed(
-        const Duration(milliseconds: 50), () => _focusNode.requestFocus());
-  }
-
-  void _stopEditing() {
-    if (_editingId != null && _editingField != null) {
-      final idx = _subtitles.indexWhere((s) => s.id == _editingId);
-      if (idx != -1) {
-        final oldValue = switch (_editingField) {
-          'startTime' => _subtitles[idx].startTime,
-          'endTime' => _subtitles[idx].endTime,
-          'text' => _subtitles[idx].text,
-          'translatedText' => _subtitles[idx].translatedText,
-          _ => '',
-        };
-        if (oldValue != _editController.text) _pushUndo();
-        setState(() {
-          switch (_editingField) {
-            case 'startTime':
-              _subtitles[idx].startTime = _editController.text;
-              break;
-            case 'endTime':
-              _subtitles[idx].endTime = _editController.text;
-              break;
-            case 'text':
-              _subtitles[idx].text = _editController.text;
-              break;
-            case 'translatedText':
-              _subtitles[idx].translatedText = _editController.text;
-              break;
-          }
-        });
-        _saveSubtitles();
-      }
-    }
-    setState(() {
-      _editingId = null;
-      _editingField = null;
-    });
   }
 
   void _handleDelete(int id) {
@@ -609,8 +560,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
 
   @override
   void dispose() {
-    _editController.dispose();
-    _focusNode.dispose();
+    for (final c in _cellControllers.values) c.dispose();
+    for (final f in _cellFocusNodes.values) f.dispose();
     _scrollController.dispose();
     _videoController?.dispose();
     super.dispose();
@@ -1037,82 +988,49 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildEditableCell(SubtitleItem sub, String field, bool isTime) {
-    final isEditing = _editingId == sub.id && _editingField == field;
+    final key = '${sub.id}_$field';
     String value;
     switch (field) {
-      case 'startTime':
-        value = sub.startTime;
-        break;
-      case 'endTime':
-        value = sub.endTime;
-        break;
-      case 'text':
-        value = sub.text;
-        break;
-      case 'translatedText':
-        value = sub.translatedText;
-        break;
-      default:
-        value = '';
+      case 'startTime': value = sub.startTime; break;
+      case 'endTime': value = sub.endTime; break;
+      case 'text': value = sub.text; break;
+      case 'translatedText': value = sub.translatedText; break;
+      default: value = '';
     }
-    if (isEditing) {
-      return isTime
-          ? TextField(
-              controller: _editController,
-              focusNode: _focusNode,
-              style: const TextStyle(fontSize: 14, fontFamily: 'monospace'),
-              decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4),
-                      borderSide: const BorderSide(color: Colors.blue)),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4),
-                      borderSide: const BorderSide(color: Colors.blue)),
-                  filled: true,
-                  fillColor: const Color(0xFF1E2433)),
-              onSubmitted: (_) => _stopEditing(),
-              onTapOutside: (_) => _stopEditing())
-          : TextField(
-              controller: _editController,
-              focusNode: _focusNode,
-              maxLines: null,
-              style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4),
-                      borderSide: const BorderSide(color: Colors.blue)),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(4),
-                      borderSide: const BorderSide(color: Colors.blue)),
-                  filled: true,
-                  fillColor: const Color(0xFF1E2433)),
-              onTapOutside: (_) => _stopEditing());
+
+    _cellControllers.putIfAbsent(key, () => TextEditingController(text: value));
+    _cellFocusNodes.putIfAbsent(key, () => FocusNode());
+    final controller = _cellControllers[key]!;
+    final focusNode = _cellFocusNodes[key]!;
+
+    // Sync controller text if subtitle value changed externally
+    if (controller.text != value && !focusNode.hasFocus) {
+      controller.text = value;
     }
-    return GestureDetector(
-      onTap: () {
-        _handleRowClick(sub.id);
-        _startEditing(sub.id, field);
+
+    final textColor = isTime ? Colors.grey : (field == 'translatedText' ? Colors.grey.shade400 : Colors.grey.shade300);
+
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (hasFocus) {
+          setState(() {
+            for (var s in _subtitles) s.selected = s.id == sub.id;
+          });
+        } else {
+          _saveCellValue(sub.id, field, controller.text);
+        }
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.transparent)),
-        child: Text(value,
-            style: TextStyle(
-                fontSize: 14,
-                color: isTime
-                    ? Colors.grey
-                    : (field == 'translatedText'
-                        ? Colors.grey.shade400
-                        : Colors.grey.shade300),
-                fontFamily: isTime ? 'monospace' : null)),
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        maxLines: isTime ? 1 : null,
+        style: TextStyle(fontSize: 14, fontFamily: isTime ? 'monospace' : null, color: textColor),
+        decoration: InputDecoration(
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          border: InputBorder.none,
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: const BorderSide(color: Colors.blue)),
+        ),
       ),
     );
   }
