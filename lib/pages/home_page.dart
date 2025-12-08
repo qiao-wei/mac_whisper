@@ -7,7 +7,7 @@ import 'package:video_player/video_player.dart';
 import 'dart:ui' as ui;
 import '../models/project.dart';
 import '../services/database_service.dart';
-import 'editor_page.dart';
+// import 'editor_page.dart';
 import 'subtitle_editor_page.dart';
 
 class _DashedBorderPainter extends CustomPainter {

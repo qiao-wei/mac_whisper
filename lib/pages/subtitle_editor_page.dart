@@ -1016,6 +1016,9 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           setState(() {
             for (var s in _subtitles) s.selected = s.id == sub.id;
           });
+          if (_videoController != null && _videoInitialized) {
+            _videoController!.seekTo(_parseDuration(sub.startTime) + const Duration(milliseconds: 10));
+          }
         } else {
           _saveCellValue(sub.id, field, controller.text);
         }
