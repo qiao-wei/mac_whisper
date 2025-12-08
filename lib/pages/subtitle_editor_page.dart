@@ -426,6 +426,32 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     }
   }
 
+  void _handleSeek(Duration position) {
+    // Find subtitle at this position
+    for (var i = 0; i < _subtitles.length; i++) {
+      final sub = _subtitles[i];
+      final startTime = _parseDuration(sub.startTime);
+      final endTime = _parseDuration(sub.endTime);
+      if (position >= startTime && position <= endTime) {
+        setState(() {
+          for (var s in _subtitles) {
+            s.selected = s.id == sub.id;
+          }
+        });
+        // Scroll to this row (approximate row height of 48)
+        if (_scrollController.hasClients) {
+          final targetOffset = i * 48.0;
+          _scrollController.animateTo(
+            targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+          );
+        }
+        break;
+      }
+    }
+  }
+
   void _handleCheckboxClick(int index) {
     final selectedIndices = _subtitles
         .asMap()
@@ -537,10 +563,18 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       _pushUndo();
       setState(() {
         switch (field) {
-          case 'startTime': _subtitles[idx].startTime = newValue; break;
-          case 'endTime': _subtitles[idx].endTime = newValue; break;
-          case 'text': _subtitles[idx].text = newValue; break;
-          case 'translatedText': _subtitles[idx].translatedText = newValue; break;
+          case 'startTime':
+            _subtitles[idx].startTime = newValue;
+            break;
+          case 'endTime':
+            _subtitles[idx].endTime = newValue;
+            break;
+          case 'text':
+            _subtitles[idx].text = newValue;
+            break;
+          case 'translatedText':
+            _subtitles[idx].translatedText = newValue;
+            break;
         }
       });
       _saveSubtitles();
@@ -943,46 +977,46 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          SizedBox(
-              width: 40,
-              child: Checkbox(
-                  value: sub.selected,
-                  onChanged: (_) => _handleCheckboxClick(index))),
-          SizedBox(
-              width: 120,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            SizedBox(
+                width: 40,
+                child: Checkbox(
+                    value: sub.selected,
+                    onChanged: (_) => _handleCheckboxClick(index))),
+            SizedBox(
+                width: 120,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildEditableCell(sub, 'startTime', true),
+                    const SizedBox(height: 4),
+                    _buildEditableCell(sub, 'endTime', true),
+                  ],
+                )),
+            Expanded(child: _buildEditableCell(sub, 'text', false)),
+            Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
+            SizedBox(
+              width: 96,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  _buildEditableCell(sub, 'startTime', true),
-                  const SizedBox(height: 4),
-                  _buildEditableCell(sub, 'endTime', true),
+                  IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 16),
+                      color: Colors.grey.shade600,
+                      onPressed: () => _handleDelete(sub.id),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints()),
+                  const SizedBox(width: 8),
+                  IconButton(
+                      icon: const Icon(Icons.text_fields, size: 16),
+                      color: Colors.grey.shade600,
+                      onPressed: () {},
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints()),
                 ],
-              )),
-          Expanded(child: _buildEditableCell(sub, 'text', false)),
-          Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
-          SizedBox(
-            width: 96,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 16),
-                    color: Colors.grey.shade600,
-                    onPressed: () => _handleDelete(sub.id),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints()),
-                const SizedBox(width: 8),
-                IconButton(
-                    icon: const Icon(Icons.text_fields, size: 16),
-                    color: Colors.grey.shade600,
-                    onPressed: () {},
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints()),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -991,11 +1025,20 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     final key = '${sub.id}_$field';
     String value;
     switch (field) {
-      case 'startTime': value = sub.startTime; break;
-      case 'endTime': value = sub.endTime; break;
-      case 'text': value = sub.text; break;
-      case 'translatedText': value = sub.translatedText; break;
-      default: value = '';
+      case 'startTime':
+        value = sub.startTime;
+        break;
+      case 'endTime':
+        value = sub.endTime;
+        break;
+      case 'text':
+        value = sub.text;
+        break;
+      case 'translatedText':
+        value = sub.translatedText;
+        break;
+      default:
+        value = '';
     }
 
     _cellControllers.putIfAbsent(key, () => TextEditingController(text: value));
@@ -1008,7 +1051,11 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       controller.text = value;
     }
 
-    final textColor = isTime ? Colors.grey : (field == 'translatedText' ? Colors.grey.shade400 : Colors.grey.shade300);
+    final textColor = isTime
+        ? Colors.grey
+        : (field == 'translatedText'
+            ? Colors.grey.shade400
+            : Colors.grey.shade300);
 
     return Focus(
       onFocusChange: (hasFocus) {
@@ -1017,7 +1064,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
             for (var s in _subtitles) s.selected = s.id == sub.id;
           });
           if (_videoController != null && _videoInitialized) {
-            _videoController!.seekTo(_parseDuration(sub.startTime) + const Duration(milliseconds: 10));
+            _videoController!.seekTo(_parseDuration(sub.startTime) +
+                const Duration(milliseconds: 10));
           }
         } else {
           _saveCellValue(sub.id, field, controller.text);
@@ -1027,12 +1075,18 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         controller: controller,
         focusNode: focusNode,
         maxLines: isTime ? 1 : null,
-        style: TextStyle(fontSize: 14, fontFamily: isTime ? 'monospace' : null, color: textColor),
+        style: TextStyle(
+            fontSize: 14,
+            fontFamily: isTime ? 'monospace' : null,
+            color: textColor),
         decoration: InputDecoration(
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: const BorderSide(color: Colors.blue)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(4),
+              borderSide: const BorderSide(color: Colors.blue)),
         ),
       ),
     );
@@ -1063,6 +1117,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                                   text: item.text,
                                 ))
                             .toList(),
+                        onSeek: _handleSeek,
                       )
                     : const Center(child: CircularProgressIndicator()),
               ),

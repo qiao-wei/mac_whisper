@@ -6,12 +6,14 @@ class VideoPreview extends StatelessWidget {
   final VideoPlayerController controller;
   final bool initialized;
   final List<Subtitle> subtitles;
+  final void Function(Duration position)? onSeek;
 
   const VideoPreview({
     super.key,
     required this.controller,
     required this.initialized,
     required this.subtitles,
+    this.onSeek,
   });
 
   String? _getCurrentSubtitle() {
@@ -118,7 +120,9 @@ class VideoPreview extends StatelessWidget {
                       if (box != null) {
                         final pos = (details.localPosition.dx / box.size.width)
                             .clamp(0.0, 1.0);
-                        controller.seekTo(value.duration * pos);
+                        final seekPosition = value.duration * pos;
+                        controller.seekTo(seekPosition);
+                        onSeek?.call(seekPosition);
                       }
                     },
                     onTapDown: (details) {
@@ -126,7 +130,9 @@ class VideoPreview extends StatelessWidget {
                       if (box != null) {
                         final pos = (details.localPosition.dx / box.size.width)
                             .clamp(0.0, 1.0);
-                        controller.seekTo(value.duration * pos);
+                        final seekPosition = value.duration * pos;
+                        controller.seekTo(seekPosition);
+                        onSeek?.call(seekPosition);
                       }
                     },
                     child: Container(
