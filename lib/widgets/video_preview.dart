@@ -49,7 +49,8 @@ class VideoPreview extends StatelessWidget {
                 final text = _getCurrentSubtitle();
                 if (text == null) return const SizedBox();
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(4),
@@ -90,46 +91,75 @@ class VideoPreview extends StatelessWidget {
               colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
             children: [
-              Builder(
-                builder: (ctx) => GestureDetector(
-                  onHorizontalDragUpdate: (details) {
-                    final box = ctx.findRenderObject() as RenderBox?;
-                    if (box != null) {
-                      final pos = (details.localPosition.dx / box.size.width).clamp(0.0, 1.0);
-                      controller.seekTo(value.duration * pos);
-                    }
-                  },
-                  onTapDown: (details) {
-                    final box = ctx.findRenderObject() as RenderBox?;
-                    if (box != null) {
-                      final pos = (details.localPosition.dx / box.size.width).clamp(0.0, 1.0);
-                      controller.seekTo(value.duration * pos);
-                    }
-                  },
-                  child: Container(
-                    height: 20,
-                    color: Colors.transparent,
-                    alignment: Alignment.center,
+              IconButton(
+                icon: Icon(
+                  value.isPlaying ? Icons.pause : Icons.play_arrow,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  value.isPlaying ? controller.pause() : controller.play();
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _formatDuration(value.position),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Builder(
+                  builder: (ctx) => GestureDetector(
+                    onHorizontalDragUpdate: (details) {
+                      final box = ctx.findRenderObject() as RenderBox?;
+                      if (box != null) {
+                        final pos = (details.localPosition.dx / box.size.width)
+                            .clamp(0.0, 1.0);
+                        controller.seekTo(value.duration * pos);
+                      }
+                    },
+                    onTapDown: (details) {
+                      final box = ctx.findRenderObject() as RenderBox?;
+                      if (box != null) {
+                        final pos = (details.localPosition.dx / box.size.width)
+                            .clamp(0.0, 1.0);
+                        controller.seekTo(value.duration * pos);
+                      }
+                    },
                     child: Container(
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade700,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                      height: 20,
+                      color: Colors.transparent,
+                      alignment: Alignment.center,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final progress = value.duration.inMilliseconds > 0
-                              ? value.position.inMilliseconds / value.duration.inMilliseconds
+                              ? value.position.inMilliseconds /
+                                  value.duration.inMilliseconds
                               : 0.0;
-                          return Container(
-                            width: constraints.maxWidth * progress,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
+                          return Stack(
+                            children: [
+                              // Background bar
+                              Container(
+                                height: 4,
+                                width: constraints.maxWidth,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade700,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                              // Progress fill (left to right)
+                              Container(
+                                height: 4,
+                                width: constraints.maxWidth * progress,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            ],
                           );
                         },
                       ),
@@ -137,29 +167,10 @@ class VideoPreview extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      value.isPlaying ? Icons.pause : Icons.play_arrow,
-                      color: Colors.white,
-                    ),
-                    onPressed: () {
-                      value.isPlaying ? controller.pause() : controller.play();
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _formatDuration(value.position),
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                  const Spacer(),
-                  Text(
-                    _formatDuration(value.duration),
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ],
+              const SizedBox(width: 12),
+              Text(
+                _formatDuration(value.duration),
+                style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
             ],
           ),
