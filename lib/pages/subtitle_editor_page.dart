@@ -870,7 +870,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           const SizedBox(width: 12),
           _isEditingTitle
               ? SizedBox(
-                  width: 200,
+                  width: 600,
                   child: TextField(
                     controller: _titleController,
                     autofocus: true,
