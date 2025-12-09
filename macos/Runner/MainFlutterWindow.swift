@@ -10,6 +10,9 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
+    // Register custom plugins
+    AudioExtractorPlugin.register(with: flutterViewController.registrar(forPlugin: "AudioExtractorPlugin"))
+
     super.awakeFromNib()
   }
 }

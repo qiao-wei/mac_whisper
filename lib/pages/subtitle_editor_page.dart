@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/database_service.dart';
+import '../services/binary_service.dart';
 import '../widgets/video_preview.dart';
 import '../models/subtitle.dart';
 
@@ -168,13 +170,13 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _saveSubtitles();
   }
 
-  // Expected file sizes for whisper models (in bytes) - from server Content-Length
+  // Expected file sizes for whisper GGML models (in bytes) - from HuggingFace
   static const _modelExpectedSizes = {
-    'tiny': 75572083, // ~72 MB
-    'base': 145262807, // ~139 MB
-    'small': 483617219, // ~461 MB
-    'medium': 1528008539, // ~1.42 GB
-    'large': 3087371615, // ~2.88 GB (large-v3)
+    'tiny': 77691713, // ~74 MB
+    'base': 147951465, // ~141 MB
+    'small': 487601967, // ~465 MB
+    'medium': 1533763059, // ~1.43 GB
+    'large': 3095033483, // ~2.88 GB (large-v3)
   };
 
   Future<bool> _isModelDownloaded(String model) async {
@@ -182,18 +184,15 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     final dir = Directory('$home/.cache/whisper');
     if (!dir.existsSync()) return false;
 
-    // Find the model file
-    final files = dir.listSync().where((f) => f.path.contains('/$model'));
-    if (files.isEmpty) return false;
+    // Look for GGML model file (ggml-{model}.bin)
+    final modelFile = File('${dir.path}/ggml-$model.bin');
+    if (!modelFile.existsSync()) return false;
 
     // Check if file size matches expected size (complete download)
     final expectedSize = _modelExpectedSizes[model];
     if (expectedSize == null) return true; // Unknown model, assume complete
 
-    final file = File(files.first.path);
-    if (!file.existsSync()) return false;
-
-    final actualSize = file.lengthSync();
+    final actualSize = modelFile.lengthSync();
     // Allow 1% tolerance for size comparison
     return actualSize >= expectedSize * 0.99;
   }
@@ -223,18 +222,18 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     });
   }
 
-  // Whisper model download URLs from OpenAI
+  // Whisper GGML model download URLs from HuggingFace (whisper.cpp format)
   static const _modelUrls = {
     'tiny':
-        'https://openaipublic.azureedge.net/main/whisper/models/65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9/tiny.pt',
+        'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin',
     'base':
-        'https://openaipublic.azureedge.net/main/whisper/models/ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e/base.pt',
+        'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin',
     'small':
-        'https://openaipublic.azureedge.net/main/whisper/models/9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794/small.pt',
+        'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin',
     'medium':
-        'https://openaipublic.azureedge.net/main/whisper/models/345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1/medium.pt',
+        'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin',
     'large':
-        'https://openaipublic.azureedge.net/main/whisper/models/e5b1a55b89c1367dacf97e3e19bfd829a01529dbfdeefa8caeb59b3f1b81dadb/large-v3.pt',
+        'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin',
   };
 
   HttpClient? _httpClient;
@@ -362,6 +361,10 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     }
   }
 
+  static const _audioExtractorChannel =
+      MethodChannel('com.macwhisper/audio_extractor');
+  final _binaryService = BinaryService();
+
   Future<void> _generateSubtitles() async {
     final videoPath = await _db.getProjectVideoPath(widget.projectId!);
     if (videoPath == null) return;
@@ -393,58 +396,136 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _previousSubtitles = List.from(_subtitles);
     setState(() {
       _isGenerating = true;
-      _progressText = 'Extracting...';
+      _progressText = 'Extracting audio...';
       _subtitles = [];
     });
+
+    String? audioPath;
     try {
-      _currentProcess = await Process.start('whisper', [
-        videoPath,
-        '--model',
-        _selectedModel,
-        '--verbose',
-        'True',
-        '--output_format',
-        'srt',
-        '--output_dir',
-        '/tmp'
-      ], environment: {
-        'PYTHONUNBUFFERED': '1'
+      // Step 1: Extract audio from video using native macOS APIs (outputs WAV)
+      final appSupportDir = await _binaryService.appSupportDir;
+      final videoName =
+          videoPath.split('/').last.replaceAll(RegExp(r'\.[^.]+$'), '');
+      final wavPath = '$appSupportDir/$videoName.wav';
+
+      audioPath =
+          await _audioExtractorChannel.invokeMethod<String>('extractAudio', {
+        'videoPath': videoPath,
+        'outputPath': wavPath,
       });
+
+      if (audioPath == null) {
+        throw Exception('Audio extraction returned null');
+      }
+
+      // Step 2: Transcribe audio using bundled whisper-cli
+      setState(() => _progressText = 'Transcribing...');
+
+      final whisperCliPath = await _binaryService.whisperCliPath;
+      final home = Platform.environment['HOME'];
+      final modelPath = '$home/.cache/whisper/ggml-$_selectedModel.bin';
+      final srtPath = '$appSupportDir/$videoName.srt';
+
+      // Verify model file exists
+      final modelFile = File(modelPath);
+      if (!modelFile.existsSync()) {
+        throw Exception(
+            'Model file not found: $modelPath. Please download the $_selectedModel model first.');
+      }
+
+      // Remove existing SRT file if any
+      final srtFile = File(srtPath);
+      if (srtFile.existsSync()) {
+        srtFile.deleteSync();
+      }
+
+      print('Running whisper-cli: $whisperCliPath -m $modelPath -f $audioPath');
+
+      _currentProcess = await Process.start(whisperCliPath, [
+        '-m', modelPath,
+        '-f', audioPath,
+        '-l', 'auto', // Auto-detect language
+        '-osrt', // Output SRT format
+        '-of',
+        '$appSupportDir/$videoName', // Output file path (without extension)
+        '-pp', // Print progress
+      ]);
+
       _currentProcess!.stdout.transform(utf8.decoder).listen((data) {
-        print('stdout: $data');
-        _parseWhisperOutput(data);
+        print('whisper stdout: $data');
+        _parseWhisperCliOutput(data);
       });
+
       _currentProcess!.stderr.transform(utf8.decoder).listen((data) {
-        print('stderr: $data');
-        final match = RegExp(r'(\d+)%').firstMatch(data);
-        if (match != null && data.contains('MiB')) {
-          setState(() => _progressText = 'Downloading ${match.group(1)}%');
-        } else if (data.contains('Detecting language') ||
-            data.contains('Detected language')) {
-          setState(() => _progressText = 'Extracting...');
+        print('whisper stderr: $data');
+        // Parse progress from whisper-cli
+        final progressMatch = RegExp(r'progress\s*=\s*(\d+)').firstMatch(data);
+        if (progressMatch != null) {
+          setState(
+              () => _progressText = 'Transcribing ${progressMatch.group(1)}%');
         }
-        _parseWhisperOutput(data);
       });
+
       final exitCode = await _currentProcess!.exitCode;
       _currentProcess = null;
+
       if (exitCode == 0) {
-        // If no subtitles parsed in real-time, read from SRT file
-        if (_subtitles.isEmpty) {
-          final srtPath =
-              '/tmp/${videoPath.split('/').last.replaceAll(RegExp(r'\.[^.]+$'), '.srt')}';
-          final srtFile = File(srtPath);
-          if (await srtFile.exists()) {
-            _parseSrt(await srtFile.readAsString());
-          }
+        // Read generated SRT file
+        if (_subtitles.isEmpty && srtFile.existsSync()) {
+          _parseSrt(await srtFile.readAsString());
         }
         await _saveSubtitles();
+      } else {
+        throw Exception('Transcription failed (exit code: $exitCode)');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     } finally {
+      // Clean up temporary audio file
+      if (audioPath != null) {
+        try {
+          File(audioPath).deleteSync();
+        } catch (_) {}
+      }
       _previousSubtitles.clear();
       setState(() {
         _isGenerating = false;
         _progressText = '';
       });
+    }
+  }
+
+  void _parseWhisperCliOutput(String data) {
+    // Parse whisper-cli output format: [00:00:00.000 --> 00:00:02.000] text
+    final regex = RegExp(
+        r'\[(\d{2}:\d{2}:\d{2}[.,]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[.,]\d{3})\]\s*(.*)');
+    for (final line in data.split('\n')) {
+      final match = regex.firstMatch(line);
+      if (match != null) {
+        final start = match.group(1)!.replaceAll('.', ',');
+        final end = match.group(2)!.replaceAll('.', ',');
+        final text = match.group(3)?.trim() ?? '';
+        if (text.isNotEmpty) {
+          setState(() => _subtitles.add(SubtitleItem(
+              id: _subtitles.length + 1,
+              startTime: start,
+              endTime: end,
+              text: text,
+              translatedText: '')));
+          Future.delayed(const Duration(milliseconds: 50), () {
+            if (_scrollController.hasClients) {
+              _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.easeOut);
+            }
+          });
+        }
+      }
     }
   }
 
