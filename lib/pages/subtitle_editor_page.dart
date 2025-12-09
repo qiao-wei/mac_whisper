@@ -52,6 +52,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   String _progressText = '';
   String _selectedModel = 'base';
   bool _isDownloading = false;
+  bool _downloadCancelled = false;
   static const _models = ['tiny', 'base', 'small', 'medium', 'large'];
   final _scrollController = ScrollController();
   Process? _currentProcess;
@@ -167,29 +168,44 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _saveSubtitles();
   }
 
+  // Expected file sizes for whisper models (in bytes)
+  static const _modelExpectedSizes = {
+    'tiny': 77691713, // ~74 MB
+    'base': 147951465, // ~141 MB
+    'small': 487601967, // ~465 MB
+    'medium': 1533774781, // ~1.46 GB
+    'large': 3094623691, // ~2.88 GB (large-v3)
+  };
+
   Future<bool> _isModelDownloaded(String model) async {
     final home = Platform.environment['HOME'];
     final dir = Directory('$home/.cache/whisper');
     if (!dir.existsSync()) return false;
-    return dir.listSync().any((f) => f.path.contains('/$model'));
+
+    // Find the model file
+    final files = dir.listSync().where((f) => f.path.contains('/$model'));
+    if (files.isEmpty) return false;
+
+    // Check if file size matches expected size (complete download)
+    final expectedSize = _modelExpectedSizes[model];
+    if (expectedSize == null) return true; // Unknown model, assume complete
+
+    final file = File(files.first.path);
+    if (!file.existsSync()) return false;
+
+    final actualSize = file.lengthSync();
+    // Allow 1% tolerance for size comparison
+    return actualSize >= expectedSize * 0.99;
   }
 
   void _stopProcess() {
     _currentProcess?.kill();
     _currentProcess = null;
-    // Delete partial model download
-    if (_isDownloading || _progressText.contains('Downloading')) {
-      final home = Platform.environment['HOME'];
-      final dir = Directory('$home/.cache/whisper');
-      if (dir.existsSync()) {
-        for (final f in dir.listSync()) {
-          if (f.path.contains('/$_selectedModel')) {
-            try {
-              f.deleteSync();
-            } catch (_) {}
-          }
-        }
-      }
+    // Close HTTP client if downloading via HTTP
+    if (_httpClient != null) {
+      _downloadCancelled = true;
+      _httpClient?.close(force: true);
+      _httpClient = null;
     }
     // Restore previous subtitles or clear partial extraction
     if (_isGenerating) {
@@ -207,45 +223,137 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     });
   }
 
+  // Whisper model download URLs from OpenAI
+  static const _modelUrls = {
+    'tiny':
+        'https://openaipublic.azureedge.net/main/whisper/models/65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9/tiny.pt',
+    'base':
+        'https://openaipublic.azureedge.net/main/whisper/models/ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e/base.pt',
+    'small':
+        'https://openaipublic.azureedge.net/main/whisper/models/9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794/small.pt',
+    'medium':
+        'https://openaipublic.azureedge.net/main/whisper/models/345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1/medium.pt',
+    'large':
+        'https://openaipublic.azureedge.net/main/whisper/models/e5b1a55b89c1367dacf97e3e19bfd829a01529dbfdeefa8caeb59b3f1b81dadb/large-v3.pt',
+  };
+
+  HttpClient? _httpClient;
+
   Future<bool> _downloadModel(String model) async {
+    final url = _modelUrls[model];
+    if (url == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unknown model: $model')),
+      );
+      return false;
+    }
+
+    final home = Platform.environment['HOME'];
+    final cacheDir = Directory('$home/.cache/whisper');
+    if (!cacheDir.existsSync()) {
+      cacheDir.createSync(recursive: true);
+    }
+
+    final fileName = url.split('/').last;
+    final filePath = '${cacheDir.path}/$fileName';
+    final file = File(filePath);
+
+    // Check for existing partial download
+    int existingBytes = 0;
+    if (file.existsSync()) {
+      existingBytes = file.lengthSync();
+    }
+
+    final dialogMessage = existingBytes > 0
+        ? 'Model "$model" has a partial download (${(existingBytes / 1024 / 1024).toStringAsFixed(1)} MB). Resume download?'
+        : 'Model "$model" is not downloaded. Download now?';
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Download Model'),
-        content: Text('Model "$model" is not downloaded. Download now?'),
+        title: Text(existingBytes > 0 ? 'Resume Download' : 'Download Model'),
+        content: Text(dialogMessage),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Download')),
+              child: Text(existingBytes > 0 ? 'Resume' : 'Download')),
         ],
       ),
     );
     if (confirm != true) return false;
+
     setState(() {
       _isDownloading = true;
+      _downloadCancelled = false;
       _progressText = 'Downloading 0%';
     });
+
     try {
-      // Use python to download the model directly
-      _currentProcess = await Process.start(
-          'python3', ['-c', 'import whisper; whisper.load_model("$model")'],
-          environment: {'PYTHONUNBUFFERED': '1'});
-      _currentProcess!.stderr.transform(utf8.decoder).listen((data) {
-        final match = RegExp(r'(\d+)%').firstMatch(data);
-        if (match != null)
-          setState(() => _progressText = 'Downloading ${match.group(1)}%');
-      });
-      _currentProcess!.stdout.transform(utf8.decoder).listen((data) {
-        final match = RegExp(r'(\d+)%').firstMatch(data);
-        if (match != null)
-          setState(() => _progressText = 'Downloading ${match.group(1)}%');
-      });
-      final exitCode = await _currentProcess!.exitCode;
-      _currentProcess = null;
-      return exitCode == 0 || await _isModelDownloaded(model);
+      _httpClient = HttpClient();
+      final request = await _httpClient!.getUrl(Uri.parse(url));
+
+      // Add Range header for resume support
+      if (existingBytes > 0) {
+        request.headers.add('Range', 'bytes=$existingBytes-');
+      }
+
+      final response = await request.close();
+
+      // Check response status
+      // 200 = full content, 206 = partial content (resume supported)
+      if (response.statusCode != 200 && response.statusCode != 206) {
+        throw Exception('Failed to download: HTTP ${response.statusCode}');
+      }
+
+      // If server doesn't support resume (returns 200 instead of 206), start from beginning
+      final bool resuming = response.statusCode == 206;
+      int totalLength;
+      int downloadedBytes;
+
+      if (resuming) {
+        // Server supports resume - get total length from Content-Range header
+        final contentRange = response.headers.value('content-range');
+        if (contentRange != null) {
+          // Format: "bytes 1000-9999/10000"
+          final match = RegExp(r'/(\d+)').firstMatch(contentRange);
+          totalLength = match != null ? int.parse(match.group(1)!) : -1;
+        } else {
+          totalLength = existingBytes + response.contentLength;
+        }
+        downloadedBytes = existingBytes;
+      } else {
+        // Server doesn't support resume - start fresh
+        totalLength = response.contentLength;
+        downloadedBytes = 0;
+      }
+
+      // Open file in append mode if resuming, write mode otherwise
+      final sink =
+          file.openWrite(mode: resuming ? FileMode.append : FileMode.write);
+
+      await for (final chunk in response) {
+        sink.add(chunk);
+        downloadedBytes += chunk.length;
+        if (totalLength > 0) {
+          final percent = (downloadedBytes / totalLength * 100).round();
+          setState(() => _progressText = 'Downloading $percent%');
+        }
+      }
+      await sink.close();
+      _httpClient = null;
+
+      return await _isModelDownloaded(model);
+    } catch (e) {
+      // Don't show error if download was cancelled by user
+      if (mounted && !_downloadCancelled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download failed: $e')),
+        );
+      }
+      return false;
     } finally {
       setState(() {
         _isDownloading = false;
