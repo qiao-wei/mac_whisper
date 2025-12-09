@@ -168,13 +168,13 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _saveSubtitles();
   }
 
-  // Expected file sizes for whisper models (in bytes)
+  // Expected file sizes for whisper models (in bytes) - from server Content-Length
   static const _modelExpectedSizes = {
-    'tiny': 77691713, // ~74 MB
-    'base': 147951465, // ~141 MB
-    'small': 487601967, // ~465 MB
-    'medium': 1533774781, // ~1.46 GB
-    'large': 3094623691, // ~2.88 GB (large-v3)
+    'tiny': 75572083, // ~72 MB
+    'base': 145262807, // ~139 MB
+    'small': 483617219, // ~461 MB
+    'medium': 1528008539, // ~1.42 GB
+    'large': 3087371615, // ~2.88 GB (large-v3)
   };
 
   Future<bool> _isModelDownloaded(String model) async {
@@ -365,6 +365,13 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   Future<void> _generateSubtitles() async {
     final videoPath = await _db.getProjectVideoPath(widget.projectId!);
     if (videoPath == null) return;
+
+    // Check if model is downloaded first
+    if (!await _isModelDownloaded(_selectedModel)) {
+      if (!await _downloadModel(_selectedModel)) return;
+    }
+
+    // Then ask about replacing existing subtitles
     if (_subtitles.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
@@ -382,9 +389,6 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         ),
       );
       if (confirm != true) return;
-    }
-    if (!await _isModelDownloaded(_selectedModel)) {
-      if (!await _downloadModel(_selectedModel)) return;
     }
     _previousSubtitles = List.from(_subtitles);
     setState(() {
