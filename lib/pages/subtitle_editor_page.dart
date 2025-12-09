@@ -55,6 +55,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   String _selectedModel = 'base';
   bool _isDownloading = false;
   bool _downloadCancelled = false;
+  bool _transcriptionCancelled = false;
   static const _models = ['tiny', 'base', 'small', 'medium', 'large-v3'];
   final _scrollController = ScrollController();
   Process? _currentProcess;
@@ -199,6 +200,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   void _stopProcess() {
+    _transcriptionCancelled = true;
     _currentProcess?.kill();
     _currentProcess = null;
     // Close HTTP client if downloading via HTTP
@@ -397,6 +399,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _previousSubtitles = List.from(_subtitles);
     setState(() {
       _isGenerating = true;
+      _transcriptionCancelled = false;
       _progressText = 'Extracting audio...';
       _subtitles = [];
     });
@@ -476,7 +479,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           _parseSrt(await srtFile.readAsString());
         }
         await _saveSubtitles();
-      } else {
+      } else if (!_transcriptionCancelled) {
+        // Only show error if not intentionally cancelled
         throw Exception('Transcription failed (exit code: $exitCode)');
       }
     } catch (e) {
