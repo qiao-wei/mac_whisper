@@ -842,6 +842,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
               : ElevatedButton(
                   onPressed: _generateSubtitles,
                   style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(120, 46),
                       backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6)),
@@ -849,31 +850,31 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                       style: TextStyle(
                           fontWeight: FontWeight.w500, fontSize: 12))),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-                color: const Color(0xFF1E2433),
-                borderRadius: BorderRadius.circular(6),
-                border:
-                    Border.all(color: Colors.blue.shade900.withOpacity(0.3))),
-            child: Row(children: [
-              Icon(Icons.translate, size: 16, color: Colors.blue.shade400),
-              const SizedBox(width: 8),
-              Text('Translate All',
-                  style: TextStyle(
-                      color: Colors.blue.shade400,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500))
-            ]),
-          ),
-          const SizedBox(width: 12),
-          Row(children: [
-            const Text('English',
-                style: TextStyle(color: Colors.grey, fontSize: 14)),
-            const SizedBox(width: 4),
-            Icon(Icons.keyboard_arrow_down,
-                size: 14, color: Colors.grey.shade600)
-          ]),
+          // Container(
+          //   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          //   decoration: BoxDecoration(
+          //       color: const Color(0xFF1E2433),
+          //       borderRadius: BorderRadius.circular(6),
+          //       border:
+          //           Border.all(color: Colors.blue.shade900.withOpacity(0.3))),
+          //   child: Row(children: [
+          //     Icon(Icons.translate, size: 16, color: Colors.blue.shade400),
+          //     const SizedBox(width: 8),
+          //     Text('Translate All',
+          //         style: TextStyle(
+          //             color: Colors.blue.shade400,
+          //             fontSize: 14,
+          //             fontWeight: FontWeight.w500))
+          //   ]),
+          // ),
+          // const SizedBox(width: 12),
+          // Row(children: [
+          //   const Text('English',
+          //       style: TextStyle(color: Colors.grey, fontSize: 14)),
+          //   const SizedBox(width: 4),
+          //   Icon(Icons.keyboard_arrow_down,
+          //       size: 14, color: Colors.grey.shade600)
+          // ]),
         ],
       ),
     );
@@ -938,12 +939,12 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                       color: Colors.grey,
                       fontSize: 11,
                       fontWeight: FontWeight.w600))),
-          const Expanded(
-              child: Text('TRANSLATED TEXT',
-                  style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600))),
+          // const Expanded(
+          //     child: Text('TRANSLATED TEXT',
+          //         style: TextStyle(
+          //             color: Colors.grey,
+          //             fontSize: 11,
+          //             fontWeight: FontWeight.w600))),
           const SizedBox(
               width: 96,
               child: Text('ACTIONS',
@@ -993,7 +994,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   ],
                 )),
             Expanded(child: _buildEditableCell(sub, 'text', false)),
-            Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
+            // Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
             SizedBox(
               width: 96,
               child: Row(
@@ -1006,12 +1007,12 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints()),
                   const SizedBox(width: 8),
-                  IconButton(
-                      icon: const Icon(Icons.text_fields, size: 16),
-                      color: Colors.grey.shade600,
-                      onPressed: () {},
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints()),
+                  // IconButton(
+                  //     icon: const Icon(Icons.text_fields, size: 16),
+                  //     color: Colors.grey.shade600,
+                  //     onPressed: () {},
+                  //     padding: EdgeInsets.zero,
+                  //     constraints: const BoxConstraints()),
                 ],
               ),
             ),
