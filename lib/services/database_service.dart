@@ -16,13 +16,20 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     final path = join(await getDatabasesPath(), 'uf_app.db');
-    return openDatabase(path, version: 3, onCreate: _onCreate, onUpgrade: _onUpgrade);
+    return openDatabase(path,
+        version: 4, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 3) {
       await db.execute('ALTER TABLE projects ADD COLUMN modified_at INTEGER');
-      await db.execute('UPDATE projects SET modified_at = created_at WHERE modified_at IS NULL');
+      await db.execute(
+          'UPDATE projects SET modified_at = created_at WHERE modified_at IS NULL');
+    }
+    if (oldVersion < 4) {
+      // Initialize app version for existing databases
+      await db.insert('config', {'key': 'app_version', 'value': 'v1.0.0'},
+          conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
@@ -56,52 +63,66 @@ class DatabaseService {
         value TEXT NOT NULL
       )
     ''');
+    // Initialize app version
+    await db.insert('config', {'key': 'app_version', 'value': 'v1.0.0'});
   }
 
   // Projects
   Future<String?> getProjectVideoPath(String id) async {
     final db = await database;
-    final result = await db.query('projects', columns: ['video_path'], where: 'id = ?', whereArgs: [id]);
+    final result = await db.query('projects',
+        columns: ['video_path'], where: 'id = ?', whereArgs: [id]);
     return result.isNotEmpty ? result.first['video_path'] as String? : null;
   }
 
   Future<List<Project>> getProjects() async {
     final db = await database;
     final maps = await db.query('projects', orderBy: 'modified_at DESC');
-    return maps.map((m) => Project(
-      id: m['id'] as String,
-      name: m['name'] as String,
-      status: ProjectStatus.values[m['status'] as int],
-      createdAt: DateTime.fromMillisecondsSinceEpoch(m['created_at'] as int),
-      modifiedAt: DateTime.fromMillisecondsSinceEpoch(m['modified_at'] as int),
-      videoPath: m['video_path'] as String?,
-      thumbnailPath: m['thumbnail_path'] as String?,
-    )).toList();
+    return maps
+        .map((m) => Project(
+              id: m['id'] as String,
+              name: m['name'] as String,
+              status: ProjectStatus.values[m['status'] as int],
+              createdAt:
+                  DateTime.fromMillisecondsSinceEpoch(m['created_at'] as int),
+              modifiedAt:
+                  DateTime.fromMillisecondsSinceEpoch(m['modified_at'] as int),
+              videoPath: m['video_path'] as String?,
+              thumbnailPath: m['thumbnail_path'] as String?,
+            ))
+        .toList();
   }
 
   Future<void> insertProject(Project p) async {
     final db = await database;
-    await db.insert('projects', {
-      'id': p.id,
-      'name': p.name,
-      'status': p.status.index,
-      'created_at': p.createdAt.millisecondsSinceEpoch,
-      'modified_at': p.modifiedAt.millisecondsSinceEpoch,
-      'video_path': p.videoPath,
-      'thumbnail_path': p.thumbnailPath,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+        'projects',
+        {
+          'id': p.id,
+          'name': p.name,
+          'status': p.status.index,
+          'created_at': p.createdAt.millisecondsSinceEpoch,
+          'modified_at': p.modifiedAt.millisecondsSinceEpoch,
+          'video_path': p.videoPath,
+          'thumbnail_path': p.thumbnailPath,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> updateProject(Project p) async {
     final db = await database;
     p.modifiedAt = DateTime.now();
-    await db.update('projects', {
-      'name': p.name,
-      'status': p.status.index,
-      'modified_at': p.modifiedAt.millisecondsSinceEpoch,
-      'video_path': p.videoPath,
-      'thumbnail_path': p.thumbnailPath,
-    }, where: 'id = ?', whereArgs: [p.id]);
+    await db.update(
+        'projects',
+        {
+          'name': p.name,
+          'status': p.status.index,
+          'modified_at': p.modifiedAt.millisecondsSinceEpoch,
+          'video_path': p.videoPath,
+          'thumbnail_path': p.thumbnailPath,
+        },
+        where: 'id = ?',
+        whereArgs: [p.id]);
   }
 
   Future<void> deleteProject(String id) async {
@@ -112,17 +133,20 @@ class DatabaseService {
 
   Future<void> updateProjectName(String id, String name) async {
     final db = await database;
-    final count = await db.update('projects', {'name': name}, where: 'id = ?', whereArgs: [id]);
+    final count = await db.update('projects', {'name': name},
+        where: 'id = ?', whereArgs: [id]);
     print('updateProjectName: id=$id, name=$name, updated=$count rows');
   }
 
   // Subtitles
   Future<List<Map<String, dynamic>>> getSubtitles(String projectId) async {
     final db = await database;
-    return db.query('subtitles', where: 'project_id = ?', whereArgs: [projectId], orderBy: 'sort_order');
+    return db.query('subtitles',
+        where: 'project_id = ?', whereArgs: [projectId], orderBy: 'sort_order');
   }
 
-  Future<void> insertSubtitle(String projectId, int startTime, int endTime, String text, String? translatedText, int sortOrder) async {
+  Future<void> insertSubtitle(String projectId, int startTime, int endTime,
+      String text, String? translatedText, int sortOrder) async {
     final db = await database;
     await db.insert('subtitles', {
       'project_id': projectId,
@@ -134,14 +158,19 @@ class DatabaseService {
     });
   }
 
-  Future<void> updateSubtitle(int id, int startTime, int endTime, String text, String? translatedText) async {
+  Future<void> updateSubtitle(int id, int startTime, int endTime, String text,
+      String? translatedText) async {
     final db = await database;
-    await db.update('subtitles', {
-      'start_time': startTime,
-      'end_time': endTime,
-      'text': text,
-      'translated_text': translatedText,
-    }, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+        'subtitles',
+        {
+          'start_time': startTime,
+          'end_time': endTime,
+          'text': text,
+          'translated_text': translatedText,
+        },
+        where: 'id = ?',
+        whereArgs: [id]);
   }
 
   Future<void> deleteSubtitle(int id) async {
@@ -151,15 +180,18 @@ class DatabaseService {
 
   Future<void> deleteSubtitlesByProject(String projectId) async {
     final db = await database;
-    await db.delete('subtitles', where: 'project_id = ?', whereArgs: [projectId]);
+    await db
+        .delete('subtitles', where: 'project_id = ?', whereArgs: [projectId]);
   }
 
   Future<void> deleteSubtitles(String projectId) async {
     final db = await database;
-    await db.delete('subtitles', where: 'project_id = ?', whereArgs: [projectId]);
+    await db
+        .delete('subtitles', where: 'project_id = ?', whereArgs: [projectId]);
   }
 
-  Future<void> saveSubtitles(String projectId, List<Map<String, dynamic>> subtitles) async {
+  Future<void> saveSubtitles(
+      String projectId, List<Map<String, dynamic>> subtitles) async {
     final db = await database;
     await deleteSubtitles(projectId);
     for (var i = 0; i < subtitles.length; i++) {
@@ -184,6 +216,7 @@ class DatabaseService {
 
   Future<void> setConfig(String key, String value) async {
     final db = await database;
-    await db.insert('config', {'key': key, 'value': value}, conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert('config', {'key': key, 'value': value},
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }

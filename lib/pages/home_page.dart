@@ -61,12 +61,19 @@ class _HomePageState extends State<HomePage> {
   bool _isDragging = false;
   String _sortBy = 'modified';
   bool _sortAsc = false;
+  String _appVersion = 'v1.0.0';
 
   @override
   void initState() {
     super.initState();
     _loadProjects();
     _loadSortPreference();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final version = await _db.getConfig('app_version');
+    if (version != null) setState(() => _appVersion = version);
   }
 
   Future<void> _loadSortPreference() async {
@@ -178,73 +185,104 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     children: [
                       Container(
-                    height: 96,
-                    width: 96,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withOpacity(0.5),
-                      border: Border.all(color: const Color(0xFF334155).withOpacity(0.8)),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(Icons.subtitles, size: 48, color: Color(0xFF135BEC)),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text('MacWhisper',
-                      style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, letterSpacing: -2)),
-                  const SizedBox(height: 8),
-                  const Text('Version 1.0.0', style: TextStyle(color: Colors.grey, fontSize: 18)),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'A powerful macOS app for effortless subtitle extraction, editing, and translation from any audio or video source.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 16, height: 1.5),
-                  ),
-                  const SizedBox(height: 48),
-                  const Text('Core Features',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 24),
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.2,
-                    children: [
-                      _buildFeatureCard(Icons.movie, 'Smart Extraction',
-                          'Automatically generate accurate subtitles from audio and video files.', true),
-                      _buildFeatureCard(Icons.edit_square, 'Intuitive Editing',
-                          'Easily proofread, modify timings, and edit text content.', true),
-                      _buildFeatureCard(Icons.desktop_mac, 'Native macOS Feel',
-                          'A clean and fluid interface that perfectly integrates with macOS.', true),
-                      _buildFeatureCard(Icons.merge_type, 'Video Merging',
-                          'Seamlessly merge your finished subtitles back into the original video.', false),
-                      _buildFeatureCard(Icons.link, 'URL Support',
-                          'Extract content directly from web links to simplify your workflow.', false),
-                      _buildFeatureCard(Icons.translate, 'One-Click Translation',
-                          'Instantly translate your subtitles into multiple languages.', false),
+                        height: 96,
+                        width: 96,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E293B).withOpacity(0.5),
+                          border: Border.all(
+                              color: const Color(0xFF334155).withOpacity(0.8)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(Icons.subtitles,
+                            size: 48, color: Color(0xFF135BEC)),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text('MacWhisper',
+                          style: TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -2)),
+                      const SizedBox(height: 8),
+                      Text('Version $_appVersion',
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 18)),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'A powerful macOS app for effortless subtitle extraction, editing, and translation from any audio or video source.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Color(0xFFCBD5E1),
+                            fontSize: 16,
+                            height: 1.5),
+                      ),
+                      const SizedBox(height: 48),
+                      const Text('Core Features',
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 24),
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 3,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        childAspectRatio: 1.2,
+                        children: [
+                          _buildFeatureCard(
+                              Icons.movie,
+                              'Smart Extraction',
+                              'Automatically generate accurate subtitles from audio and video files.',
+                              true),
+                          _buildFeatureCard(
+                              Icons.edit_square,
+                              'Intuitive Editing',
+                              'Easily proofread, modify timings, and edit text content.',
+                              true),
+                          _buildFeatureCard(
+                              Icons.desktop_mac,
+                              'Native macOS Feel',
+                              'A clean and fluid interface that perfectly integrates with macOS.',
+                              true),
+                          _buildFeatureCard(
+                              Icons.merge_type,
+                              'Video Merging',
+                              'Seamlessly merge your finished subtitles back into the original video.',
+                              false),
+                          _buildFeatureCard(
+                              Icons.link,
+                              'URL Support',
+                              'Extract content directly from web links to simplify your workflow.',
+                              false),
+                          _buildFeatureCard(
+                              Icons.translate,
+                              'One-Click Translation',
+                              'Instantly translate your subtitles into multiple languages.',
+                              false),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Container(
+                        padding: const EdgeInsets.only(top: 24),
+                        decoration: BoxDecoration(
+                          border: Border(
+                              top: BorderSide(color: Colors.grey.shade800)),
+                        ),
+                        child: const Text(
+                            '© 2024 The MacWhisper Team. All Rights Reserved.',
+                            style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  Container(
-                    padding: const EdgeInsets.only(top: 24),
-                    decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: Colors.grey.shade800)),
-                    ),
-                    child: const Text('© 2024 The MacWhisper Team. All Rights Reserved.',
-                        style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            top: 16,
-            right: 16,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.grey),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.grey),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
             ],
           ),
         ),
@@ -252,7 +290,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFeatureCard(IconData icon, String title, String description, bool enabled) {
+  Widget _buildFeatureCard(
+      IconData icon, String title, String description, bool enabled) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -263,17 +302,22 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 32, color: enabled ? const Color(0xFF135BEC) : Colors.grey.shade700),
+          Icon(icon,
+              size: 32,
+              color: enabled ? const Color(0xFF135BEC) : Colors.grey.shade700),
           const SizedBox(height: 12),
           Text(title,
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: enabled ? const Color(0xFFF1F5F9) : Colors.grey.shade600),
+                  color:
+                      enabled ? const Color(0xFFF1F5F9) : Colors.grey.shade600),
               textAlign: TextAlign.center),
           const SizedBox(height: 8),
           Text(description,
-              style: TextStyle(fontSize: 11, color: enabled ? Colors.grey : Colors.grey.shade700),
+              style: TextStyle(
+                  fontSize: 11,
+                  color: enabled ? Colors.grey : Colors.grey.shade700),
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis),
@@ -380,13 +424,12 @@ class _HomePageState extends State<HomePage> {
                         colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child:
-                      const Icon(Icons.mic, color: Colors.white, size: 22),
+                  child: const Icon(Icons.mic, color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 12),
                 const Text('MacWhisper',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 18)),
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               ],
             ),
           ),
@@ -395,10 +438,10 @@ class _HomePageState extends State<HomePage> {
           _buildMenuItem('In Progress', Icons.access_time),
           _buildMenuItem('Completed', Icons.check_circle_outline),
           const Spacer(),
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('v2.4.0',
-                style: TextStyle(color: Colors.grey, fontSize: 12)),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(_appVersion,
+                style: const TextStyle(color: Colors.grey, fontSize: 12)),
           ),
         ],
       ),
@@ -512,7 +555,10 @@ class _HomePageState extends State<HomePage> {
                       final result = await showMenu<String>(
                         context: context,
                         position: RelativeRect.fromLTRB(
-                            offset.dx, offset.dy + box.size.height, offset.dx + box.size.width, 0),
+                            offset.dx,
+                            offset.dy + box.size.height,
+                            offset.dx + box.size.width,
+                            0),
                         color: const Color(0xFF1F2430),
                         items: [
                           const PopupMenuItem(
@@ -535,24 +581,24 @@ class _HomePageState extends State<HomePage> {
                       }
                     },
                     child: Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                        color: const Color(0xFF13161F),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade800)),
-                    child: Row(
-                      children: [
-                        Text(
-                            'Sort by: ${_sortBy == 'modified' ? 'Last Modified' : _sortBy == 'created' ? 'Creation Time' : 'Name'}',
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.grey)),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.keyboard_arrow_down,
-                            size: 16, color: Colors.grey),
-                      ],
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFF13161F),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade800)),
+                      child: Row(
+                        children: [
+                          Text(
+                              'Sort by: ${_sortBy == 'modified' ? 'Last Modified' : _sortBy == 'created' ? 'Creation Time' : 'Name'}',
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.grey)),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.keyboard_arrow_down,
+                              size: 16, color: Colors.grey),
+                        ],
+                      ),
                     ),
-                  ),
                   ),
                 ),
               ),
@@ -900,7 +946,8 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
                           ),
                     const SizedBox(height: 4),
                     Text(_fileInfo,
-                        style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 12)),
                   ],
                 ),
               ),
