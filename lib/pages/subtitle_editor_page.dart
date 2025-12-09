@@ -43,7 +43,7 @@ class SubtitleEditorPage extends StatefulWidget {
 
 class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   bool _showPreview = true;
-  String _previewMode = 'text';
+  // String _previewMode = 'text';
   final Map<String, TextEditingController> _cellControllers = {};
   final Map<String, FocusNode> _cellFocusNodes = {};
   final _db = DatabaseService();
