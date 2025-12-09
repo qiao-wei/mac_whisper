@@ -32,6 +32,15 @@ class BinaryService {
     return _whisperCliPath!;
   }
 
+  String? _ytdlpPath;
+
+  /// Get the path to yt-dlp executable
+  Future<String> get ytdlpPath async {
+    if (_ytdlpPath != null) return _ytdlpPath!;
+    _ytdlpPath = await _getBinaryPath('yt-dlp');
+    return _ytdlpPath!;
+  }
+
   /// Get binary path - checks bundled location first, then project root, then system PATH
   Future<String> _getBinaryPath(String binaryName) async {
     // Try bundled location in app bundle (production)

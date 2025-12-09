@@ -31,6 +31,7 @@
 		CCA338D0092CC1DB4DA098F8 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F0AA9B182B13CE7542168C70 /* Pods_Runner.framework */; };
 		AE1234560001000100010001 /* AudioExtractorPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010002 /* AudioExtractorPlugin.swift */; };
 		AE1234560001000100010003 /* whisper-cli in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010004 /* whisper-cli */; };
+		AE1234560001000100010005 /* yt-dlp in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010006 /* yt-dlp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -77,6 +78,7 @@
 		33CC11122044BFA00003C045 /* MainFlutterWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainFlutterWindow.swift; sourceTree = "<group>"; };
 		AE1234560001000100010002 /* AudioExtractorPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioExtractorPlugin.swift; sourceTree = "<group>"; };
 		AE1234560001000100010004 /* whisper-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "whisper-cli"; sourceTree = "<group>"; };
+		AE1234560001000100010006 /* yt-dlp */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "yt-dlp"; sourceTree = "<group>"; };
 		33CEB47222A05771004F2AC0 /* Flutter-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Debug.xcconfig"; sourceTree = "<group>"; };
 		33CEB47422A05771004F2AC0 /* Flutter-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Release.xcconfig"; sourceTree = "<group>"; };
 		33CEB47722A0578A004F2AC0 /* Flutter-Generated.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Flutter-Generated.xcconfig"; path = "ephemeral/Flutter-Generated.xcconfig"; sourceTree = "<group>"; };
@@ -183,6 +185,7 @@
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				AE1234560001000100010002 /* AudioExtractorPlugin.swift */,
 				AE1234560001000100010004 /* whisper-cli */,
+				AE1234560001000100010006 /* yt-dlp */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
 				33CC11242044D66E0003C045 /* Resources */,
@@ -324,6 +327,7 @@
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
 				AE1234560001000100010003 /* whisper-cli in Resources */,
+				AE1234560001000100010005 /* yt-dlp in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

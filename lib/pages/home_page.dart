@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:file_picker/file_picker.dart';
@@ -7,6 +8,7 @@ import 'package:video_player/video_player.dart';
 import 'dart:ui' as ui;
 import '../models/project.dart';
 import '../services/database_service.dart';
+import '../services/binary_service.dart';
 // import 'editor_page.dart';
 import 'subtitle_editor_page.dart';
 
@@ -56,12 +58,16 @@ class _HomePageState extends State<HomePage> {
   String _searchQuery = '';
   String? _selectedProjectId;
   final _db = DatabaseService();
+  final _binaryService = BinaryService();
   List<Project> _projects = [];
   bool _isLoading = true;
   bool _isDragging = false;
   String _sortBy = 'modified';
   bool _sortAsc = false;
   String _appVersion = 'v1.0.0';
+  final _urlController = TextEditingController();
+  bool _isDownloading = false;
+  String _downloadProgress = '';
 
   @override
   void initState() {
@@ -343,6 +349,100 @@ class _HomePageState extends State<HomePage> {
       setState(() => _projects.insert(0, project));
       if (mounted)
         _openSubtitleEditor(projectId: project.id, projectName: project.name);
+    }
+  }
+
+  Future<void> _handleUrlExtraction() async {
+    final url = _urlController.text.trim();
+    if (url.isEmpty || !url.startsWith('http')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid URL')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isDownloading = true;
+      _downloadProgress = 'Starting download...';
+    });
+
+    try {
+      final ytdlpPath = await _binaryService.ytdlpPath;
+      final appSupportDir = await _binaryService.appSupportDir;
+      final outputPath = '$appSupportDir/%(title)s.%(ext)s';
+
+      final process = await Process.start(ytdlpPath, [
+        '-f',
+        'best[ext=mp4]/best',
+        '-o',
+        outputPath,
+        '--newline',
+        '--no-playlist',
+        url,
+      ]);
+
+      String? downloadedFilePath;
+      String videoTitle = 'Downloaded Video';
+
+      process.stdout.transform(utf8.decoder).listen((data) {
+        print('yt-dlp stdout: $data');
+        // Parse progress
+        final progressMatch = RegExp(r'(\d+\.?\d*)%').firstMatch(data);
+        if (progressMatch != null) {
+          setState(() =>
+              _downloadProgress = 'Downloading ${progressMatch.group(1)}%');
+        }
+        // Parse destination
+        final destMatch =
+            RegExp(r'\[download\] Destination: (.+)').firstMatch(data);
+        if (destMatch != null) {
+          downloadedFilePath = destMatch.group(1);
+        }
+        // Parse merger output
+        final mergeMatch =
+            RegExp(r'\[Merger\] Merging formats into "(.+)"').firstMatch(data);
+        if (mergeMatch != null) {
+          downloadedFilePath = mergeMatch.group(1);
+        }
+      });
+
+      process.stderr.transform(utf8.decoder).listen((data) {
+        print('yt-dlp stderr: $data');
+      });
+
+      final exitCode = await process.exitCode;
+
+      if (exitCode == 0 && downloadedFilePath != null) {
+        videoTitle = downloadedFilePath!.split('/').last;
+        final project = Project(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: videoTitle,
+          status: ProjectStatus.inProgress,
+          createdAt: DateTime.now(),
+          videoPath: downloadedFilePath,
+        );
+        await _db.insertProject(project);
+        setState(() {
+          _projects.insert(0, project);
+          _urlController.clear();
+        });
+        if (mounted) {
+          _openSubtitleEditor(projectId: project.id, projectName: project.name);
+        }
+      } else {
+        throw Exception('Download failed (exit code: $exitCode)');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      setState(() {
+        _isDownloading = false;
+        _downloadProgress = '';
+      });
     }
   }
 
@@ -767,9 +867,11 @@ class _HomePageState extends State<HomePage> {
                 color: const Color(0xFF13161F),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.grey.shade700)),
-            child: const TextField(
-              style: TextStyle(fontSize: 14),
-              decoration: InputDecoration(
+            child: TextField(
+              controller: _urlController,
+              style: const TextStyle(fontSize: 14),
+              enabled: !_isDownloading,
+              decoration: const InputDecoration(
                   hintText: 'https://',
                   hintStyle: TextStyle(color: Colors.grey),
                   border: InputBorder.none,
@@ -782,13 +884,31 @@ class _HomePageState extends State<HomePage> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: () => _openSubtitleEditor(),
+              onPressed: _isDownloading ? null : _handleUrlExtraction,
               style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2563EB),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8))),
-              child: const Text('Start Extraction',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
+              child: _isDownloading
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(_downloadProgress,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
+                      ],
+                    )
+                  : const Text('Start Extraction',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
             ),
           ),
         ],
