@@ -55,7 +55,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   String _selectedModel = 'base';
   bool _isDownloading = false;
   bool _downloadCancelled = false;
-  static const _models = ['tiny', 'base', 'small', 'medium', 'large'];
+  static const _models = ['tiny', 'base', 'small', 'medium', 'large-v3'];
   final _scrollController = ScrollController();
   Process? _currentProcess;
   List<SubtitleItem> _previousSubtitles = [];
@@ -70,7 +70,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   @override
   void initState() {
     super.initState();
-    _title = widget.projectName ?? 'Subtitle Editor';
+    _title = (widget.projectName ?? 'Subtitle Editor')
+        .replaceAll(RegExp(r'\.[^.]+$'), '');
     _loadSubtitles();
     _loadSelectedModel();
     _initVideo();
