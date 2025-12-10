@@ -378,6 +378,7 @@ class _HomePageState extends State<HomePage> {
         outputPath,
         '--newline',
         '--no-playlist',
+        '--restrict-filenames', // Sanitize filenames to avoid special characters
         url,
       ]);
 

@@ -32,6 +32,12 @@
 		AE1234560001000100010001 /* AudioExtractorPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010002 /* AudioExtractorPlugin.swift */; };
 		AE1234560001000100010003 /* whisper-cli in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010004 /* whisper-cli */; };
 		AE1234560001000100010005 /* yt-dlp in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010006 /* yt-dlp */; };
+		AE1234560001000100010007 /* libwhisper.1.dylib in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010008 /* libwhisper.1.dylib */; };
+		AE1234560001000100010009 /* libggml.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = AE123456000100010001000A /* libggml.0.dylib */; };
+		AE123456000100010001000B /* libggml-base.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = AE123456000100010001000C /* libggml-base.0.dylib */; };
+		AE123456000100010001000D /* libggml-cpu.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = AE123456000100010001000E /* libggml-cpu.0.dylib */; };
+		AE123456000100010001000F /* libggml-blas.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010010 /* libggml-blas.0.dylib */; };
+		AE1234560001000100010011 /* libggml-metal.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010012 /* libggml-metal.0.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +85,12 @@
 		AE1234560001000100010002 /* AudioExtractorPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioExtractorPlugin.swift; sourceTree = "<group>"; };
 		AE1234560001000100010004 /* whisper-cli */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "whisper-cli"; sourceTree = "<group>"; };
 		AE1234560001000100010006 /* yt-dlp */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = "yt-dlp"; sourceTree = "<group>"; };
+		AE1234560001000100010008 /* libwhisper.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libwhisper.1.dylib"; sourceTree = "<group>"; };
+		AE123456000100010001000A /* libggml.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml.0.dylib"; sourceTree = "<group>"; };
+		AE123456000100010001000C /* libggml-base.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-base.0.dylib"; sourceTree = "<group>"; };
+		AE123456000100010001000E /* libggml-cpu.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-cpu.0.dylib"; sourceTree = "<group>"; };
+		AE1234560001000100010010 /* libggml-blas.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-blas.0.dylib"; sourceTree = "<group>"; };
+		AE1234560001000100010012 /* libggml-metal.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-metal.0.dylib"; sourceTree = "<group>"; };
 		33CEB47222A05771004F2AC0 /* Flutter-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Debug.xcconfig"; sourceTree = "<group>"; };
 		33CEB47422A05771004F2AC0 /* Flutter-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Release.xcconfig"; sourceTree = "<group>"; };
 		33CEB47722A0578A004F2AC0 /* Flutter-Generated.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Flutter-Generated.xcconfig"; path = "ephemeral/Flutter-Generated.xcconfig"; sourceTree = "<group>"; };
@@ -186,6 +198,12 @@
 				AE1234560001000100010002 /* AudioExtractorPlugin.swift */,
 				AE1234560001000100010004 /* whisper-cli */,
 				AE1234560001000100010006 /* yt-dlp */,
+				AE1234560001000100010008 /* libwhisper.1.dylib */,
+				AE123456000100010001000A /* libggml.0.dylib */,
+				AE123456000100010001000C /* libggml-base.0.dylib */,
+				AE123456000100010001000E /* libggml-cpu.0.dylib */,
+				AE1234560001000100010010 /* libggml-blas.0.dylib */,
+				AE1234560001000100010012 /* libggml-metal.0.dylib */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
 				33CC11242044D66E0003C045 /* Resources */,
@@ -328,6 +346,12 @@
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
 				AE1234560001000100010003 /* whisper-cli in Resources */,
 				AE1234560001000100010005 /* yt-dlp in Resources */,
+				AE1234560001000100010007 /* libwhisper.1.dylib in Resources */,
+				AE1234560001000100010009 /* libggml.0.dylib in Resources */,
+				AE123456000100010001000B /* libggml-base.0.dylib in Resources */,
+				AE123456000100010001000D /* libggml-cpu.0.dylib in Resources */,
+				AE123456000100010001000F /* libggml-blas.0.dylib in Resources */,
+				AE1234560001000100010011 /* libggml-metal.0.dylib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

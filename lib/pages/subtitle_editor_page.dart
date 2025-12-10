@@ -500,8 +500,14 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     try {
       // Step 1: Extract audio from video using native macOS APIs (outputs WAV)
       final appSupportDir = await _binaryService.appSupportDir;
-      final videoName =
+      // Sanitize video name to remove special characters that cause path issues
+      final rawVideoName =
           videoPath.split('/').last.replaceAll(RegExp(r'\.[^.]+$'), '');
+      final videoName = rawVideoName
+          .replaceAll(
+              RegExp(r'[^\w\s-]'), '_') // Replace special chars with underscore
+          .replaceAll(RegExp(r'\s+'), '_') // Replace spaces with underscore
+          .replaceAll(RegExp(r'_+'), '_'); // Collapse multiple underscores
       final wavPath = '$appSupportDir/$videoName.wav';
 
       audioPath =
