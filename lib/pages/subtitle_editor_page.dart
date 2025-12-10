@@ -890,7 +890,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                               color: Colors.transparent,
                               child: Center(
                                 child: Container(
-                                  width: 2,
+                                  width: 1,
                                   decoration: BoxDecoration(
                                     color: _isDraggingDivider
                                         ? Colors.blue.withOpacity(0.6)
