@@ -274,7 +274,7 @@ class _HomePageState extends State<HomePage> {
                               top: BorderSide(color: Colors.grey.shade800)),
                         ),
                         child: const Text(
-                            '© 2024 The MacWhisper Team. All Rights Reserved.',
+                            '© 2025 The MacWhisper Team. All Rights Reserved.',
                             style: TextStyle(color: Colors.grey, fontSize: 12)),
                       ),
                     ],
