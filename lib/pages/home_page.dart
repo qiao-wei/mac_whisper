@@ -258,7 +258,7 @@ class _HomePageState extends State<HomePage> {
                               Icons.link,
                               'URL Support',
                               'Extract content directly from web links to simplify your workflow.',
-                              false),
+                              true),
                           _buildFeatureCard(
                               Icons.translate,
                               'One-Click Translation',
