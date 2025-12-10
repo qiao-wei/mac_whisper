@@ -68,6 +68,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   double _previewPanelRatio = 0.4; // Default 40% for preview panel
   bool _isDraggingDivider = false;
   bool _isHoveringDivider = false;
+  final Map<int, GlobalKey> _rowKeys = {};
 
   List<SubtitleItem> _subtitles = [];
 
@@ -87,7 +88,52 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     if (videoPath != null) {
       _videoController = VideoPlayerController.file(File(videoPath));
       await _videoController!.initialize();
+      // Add listener for auto-scrolling during playback
+      _videoController!.addListener(_onVideoPositionChanged);
       setState(() => _videoInitialized = true);
+    }
+  }
+
+  int? _lastHighlightedSubtitleId;
+
+  void _onVideoPositionChanged() {
+    if (_videoController == null || !_videoInitialized) return;
+    if (!_videoController!.value.isPlaying) return;
+
+    final position = _videoController!.value.position;
+
+    // Find subtitle at current position
+    for (var i = 0; i < _subtitles.length; i++) {
+      final sub = _subtitles[i];
+      final startTime = _parseDuration(sub.startTime);
+      final endTime = _parseDuration(sub.endTime);
+
+      if (position >= startTime && position <= endTime) {
+        // Only update if it's a different subtitle
+        if (_lastHighlightedSubtitleId != sub.id) {
+          _lastHighlightedSubtitleId = sub.id;
+          setState(() {
+            for (var s in _subtitles) {
+              s.selected = s.id == sub.id;
+            }
+          });
+          // Scroll to center this row in the visible area
+          _scrollToRow(sub.id);
+        }
+        break;
+      }
+    }
+  }
+
+  void _scrollToRow(int subtitleId) {
+    final key = _rowKeys[subtitleId];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        alignment: 0.5, // Center in viewport
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -817,6 +863,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     for (final c in _cellControllers.values) c.dispose();
     for (final f in _cellFocusNodes.values) f.dispose();
     _scrollController.dispose();
+    _videoController?.removeListener(_onVideoPositionChanged);
     _videoController?.dispose();
     super.dispose();
   }
@@ -1246,7 +1293,11 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildSubtitleRow(SubtitleItem sub, int index) {
+    // Get or create GlobalKey for this row
+    _rowKeys.putIfAbsent(sub.id, () => GlobalKey());
+
     return MouseRegion(
+      key: _rowKeys[sub.id],
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hoveredRowId = sub.id),
       onExit: (_) => setState(() => _hoveredRowId = null),
