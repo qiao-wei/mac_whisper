@@ -65,6 +65,9 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   VideoPlayerController? _videoController;
   bool _videoInitialized = false;
   int? _hoveredRowId;
+  double _previewPanelRatio = 0.4; // Default 40% for preview panel
+  bool _isDraggingDivider = false;
+  bool _isHoveringDivider = false;
 
   List<SubtitleItem> _subtitles = [];
 
@@ -75,6 +78,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         .replaceAll(RegExp(r'\.[^.]+$'), '');
     _loadSubtitles();
     _loadSelectedModel();
+    _loadPreviewPanelRatio();
     _initVideo();
   }
 
@@ -92,6 +96,24 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     if (model != null && _models.contains(model)) {
       setState(() => _selectedModel = model);
     }
+  }
+
+  Future<void> _loadPreviewPanelRatio() async {
+    if (widget.projectId == null) return;
+    final ratio =
+        await _db.getConfig('preview_panel_ratio_${widget.projectId}');
+    if (ratio != null) {
+      final parsed = double.tryParse(ratio);
+      if (parsed != null && parsed >= 0.2 && parsed <= 0.6) {
+        setState(() => _previewPanelRatio = parsed);
+      }
+    }
+  }
+
+  Future<void> _savePreviewPanelRatio() async {
+    if (widget.projectId == null) return;
+    await _db.setConfig('preview_panel_ratio_${widget.projectId}',
+        _previewPanelRatio.toString());
   }
 
   Future<void> _loadSubtitles() async {
@@ -807,44 +829,111 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         children: [
           _buildHeader(),
           Expanded(
-            child: Stack(
-              children: [
-                Row(
+            child: LayoutBuilder(
+              builder: (layoutContext, constraints) {
+                final totalWidth = constraints.maxWidth;
+                final previewWidth =
+                    _showPreview ? totalWidth * _previewPanelRatio : 0.0;
+                final subtitleWidth = totalWidth - previewWidth;
+
+                return Stack(
                   children: [
-                    Expanded(
-                        flex: _showPreview ? 60 : 100,
-                        child: _buildSubtitleList()),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: subtitleWidth,
+                          child: _buildSubtitleList(),
+                        ),
+                        if (_showPreview)
+                          SizedBox(
+                            width: previewWidth,
+                            child: _buildPreviewPanel(),
+                          ),
+                      ],
+                    ),
+                    // Draggable divider for resizing
                     if (_showPreview)
-                      Expanded(flex: 40, child: _buildPreviewPanel()),
-                  ],
-                ),
-                Positioned(
-                  left: _showPreview
-                      ? MediaQuery.of(context).size.width * 0.6 - 14
-                      : MediaQuery.of(context).size.width - 28,
-                  top: 0,
-                  bottom: 0,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _showPreview = !_showPreview),
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                            color: const Color(0xFF1E2029),
-                            border: Border.all(color: Colors.grey.shade700),
-                            shape: BoxShape.circle),
-                        child: Icon(
-                            _showPreview
-                                ? Icons.chevron_right
-                                : Icons.chevron_left,
-                            size: 16,
-                            color: Colors.grey),
+                      Positioned(
+                        left: subtitleWidth - 4,
+                        top: 0,
+                        bottom: 0,
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.resizeColumn,
+                          onEnter: (_) =>
+                              setState(() => _isHoveringDivider = true),
+                          onExit: (_) =>
+                              setState(() => _isHoveringDivider = false),
+                          child: GestureDetector(
+                            onHorizontalDragStart: (_) {
+                              setState(() => _isDraggingDivider = true);
+                            },
+                            onHorizontalDragUpdate: (details) {
+                              final RenderBox? box = layoutContext
+                                  .findRenderObject() as RenderBox?;
+                              if (box != null) {
+                                final localPos =
+                                    box.globalToLocal(details.globalPosition);
+                                final newSubtitleWidth = localPos.dx;
+                                final newRatio =
+                                    1.0 - (newSubtitleWidth / totalWidth);
+                                setState(() {
+                                  _previewPanelRatio = newRatio.clamp(0.2, 0.6);
+                                });
+                              }
+                            },
+                            onHorizontalDragEnd: (_) {
+                              setState(() => _isDraggingDivider = false);
+                              _savePreviewPanelRatio();
+                            },
+                            child: Container(
+                              width: 8,
+                              color: Colors.transparent,
+                              child: Center(
+                                child: Container(
+                                  width: 2,
+                                  decoration: BoxDecoration(
+                                    color: _isDraggingDivider
+                                        ? Colors.blue.withOpacity(0.6)
+                                        : _isHoveringDivider
+                                            ? Colors.grey.shade600
+                                            : Colors.grey.shade800,
+                                    borderRadius: BorderRadius.circular(1),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // Toggle button
+                    Positioned(
+                      left: _showPreview ? subtitleWidth - 14 : totalWidth - 28,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () =>
+                              setState(() => _showPreview = !_showPreview),
+                          child: Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                                color: const Color(0xFF1E2029),
+                                border: Border.all(color: Colors.grey.shade700),
+                                shape: BoxShape.circle),
+                            child: Icon(
+                                _showPreview
+                                    ? Icons.chevron_right
+                                    : Icons.chevron_left,
+                                size: 16,
+                                color: Colors.grey),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
         ],
