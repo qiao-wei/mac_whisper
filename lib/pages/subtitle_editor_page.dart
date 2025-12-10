@@ -87,10 +87,16 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     final videoPath = await _db.getProjectVideoPath(widget.projectId!);
     if (videoPath != null) {
       _videoController = VideoPlayerController.file(File(videoPath));
-      await _videoController!.initialize();
-      // Add listener for auto-scrolling during playback
-      _videoController!.addListener(_onVideoPositionChanged);
-      setState(() => _videoInitialized = true);
+      // Initialize video in background without blocking the UI
+      _videoController!.initialize().then((_) {
+        // Add listener for auto-scrolling during playback
+        _videoController!.addListener(_onVideoPositionChanged);
+        if (mounted) {
+          setState(() => _videoInitialized = true);
+        }
+      }).catchError((error) {
+        print('Error initializing video: $error');
+      });
     }
   }
 
