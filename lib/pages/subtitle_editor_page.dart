@@ -134,12 +134,30 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   void _scrollToRow(int subtitleId) {
     final key = _rowKeys[subtitleId];
     if (key?.currentContext != null) {
+      // Use GlobalKey context for precise scrolling if available
       Scrollable.ensureVisible(
         key!.currentContext!,
         alignment: 0.5, // Center in viewport
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
       );
+    } else {
+      // Fallback: calculate position manually if row hasn't been built yet
+      final index = _subtitles.indexWhere((s) => s.id == subtitleId);
+      if (index != -1 && _scrollController.hasClients) {
+        // Approximate row height (padding + content)
+        const rowHeight = 72.0;
+        final targetOffset = index * rowHeight;
+        final viewportHeight = _scrollController.position.viewportDimension;
+        // Center the row in viewport
+        final centeredOffset =
+            targetOffset - (viewportHeight / 2) + (rowHeight / 2);
+        _scrollController.animateTo(
+          centeredOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
     }
   }
 
@@ -696,6 +714,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           const Duration(milliseconds: 100);
       _videoController!.seekTo(duration);
     }
+    // Scroll the clicked row into view
+    _scrollToRow(id);
   }
 
   void _handleSeek(Duration position) {
