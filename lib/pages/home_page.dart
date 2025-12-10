@@ -736,8 +736,8 @@ class _HomePageState extends State<HomePage> {
       key: ValueKey(project.id),
       project: project,
       isSelected: _selectedProjectId == project.id,
-      onTap: () => setState(() => _selectedProjectId =
-          _selectedProjectId == project.id ? null : project.id),
+      onTap: () =>
+          _openSubtitleEditor(projectId: project.id, projectName: project.name),
       onDoubleTap: () =>
           _openSubtitleEditor(projectId: project.id, projectName: project.name),
       onStatusToggle: () {
