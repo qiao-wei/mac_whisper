@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../models/subtitle.dart';
-import '../main.dart';
-import '../theme/app_theme.dart';
 
 class Timeline extends StatelessWidget {
   final VideoPlayerController controller;
@@ -18,29 +16,26 @@ class Timeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
       height: 100,
-      color: theme.background,
+      color: const Color(0xFF252525),
       child: Column(
         children: [
-          Container(height: 1, color: theme.border),
+          Container(height: 1, color: Colors.grey.shade800),
           Expanded(
             child: initialized
                 ? ValueListenableBuilder(
                     valueListenable: controller,
-                    builder: (_, value, __) => _buildTimeline(context, value),
+                    builder: (_, value, __) => _buildTimeline(value),
                   )
-                : Center(
-                    child: Text('加载中...',
-                        style: TextStyle(color: theme.textSecondary))),
+                : const Center(child: Text('加载中...')),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTimeline(BuildContext context, VideoPlayerValue value) {
+  Widget _buildTimeline(VideoPlayerValue value) {
     final duration = value.duration.inMilliseconds;
     if (duration == 0) return const SizedBox();
     final position = value.position.inMilliseconds;
@@ -51,14 +46,13 @@ class Timeline extends StatelessWidget {
         return GestureDetector(
           onTapDown: (details) {
             final ratio = details.localPosition.dx / width;
-            controller
-                .seekTo(Duration(milliseconds: (duration * ratio).toInt()));
+            controller.seekTo(Duration(milliseconds: (duration * ratio).toInt()));
           },
           child: Stack(
             children: [
               _buildSubtitleBlocks(width, duration),
               _buildPlayhead(width, position, duration),
-              _buildTimeMarkers(context, width, duration),
+              _buildTimeMarkers(width, duration),
             ],
           ),
         );
@@ -113,8 +107,7 @@ class Timeline extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeMarkers(BuildContext context, double width, int duration) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
+  Widget _buildTimeMarkers(double width, int duration) {
     final markers = <Widget>[];
     final interval = duration > 60000 ? 10000 : 5000;
     for (int ms = 0; ms <= duration; ms += interval) {
@@ -124,7 +117,7 @@ class Timeline extends StatelessWidget {
         top: 8,
         child: Text(
           _formatMs(ms),
-          style: TextStyle(fontSize: 9, color: theme.textMuted),
+          style: TextStyle(fontSize: 9, color: Colors.grey.shade500),
         ),
       ));
     }

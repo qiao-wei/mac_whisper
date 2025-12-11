@@ -8,8 +8,6 @@ import '../services/database_service.dart';
 import '../services/binary_service.dart';
 import '../widgets/video_preview.dart';
 import '../models/subtitle.dart';
-import '../main.dart';
-import '../theme/app_theme.dart';
 
 class SubtitleItem {
   int? dbId;
@@ -914,9 +912,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Scaffold(
-      backgroundColor: theme.background,
+      backgroundColor: const Color(0xFF0F1115),
       body: Column(
         children: [
           _buildHeader(),
@@ -987,8 +984,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                                     color: _isDraggingDivider
                                         ? Colors.blue.withOpacity(0.6)
                                         : _isHoveringDivider
-                                            ? Colors.grey.shade400
-                                            : Colors.grey.shade300,
+                                            ? Colors.grey.shade600
+                                            : Colors.grey.shade800,
                                     borderRadius: BorderRadius.circular(1),
                                   ),
                                 ),
@@ -1010,8 +1007,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                                color: const Color(0xFFFFFFFF),
-                                border: Border.all(color: Colors.grey.shade300),
+                                color: const Color(0xFF1E2029),
+                                border: Border.all(color: Colors.grey.shade700),
                                 shape: BoxShape.circle),
                             child: Icon(
                                 _showPreview
@@ -1034,23 +1031,22 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildHeader() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-          color: theme.surface,
-          border: Border(bottom: BorderSide(color: theme.border))),
+          border: Border(bottom: BorderSide(color: Colors.grey.shade800))),
       child: Row(
         children: [
           IconButton(
-              icon: Icon(Icons.arrow_back, color: theme.textSecondary),
+              icon: const Icon(Icons.arrow_back, color: Colors.grey),
               onPressed: () => Navigator.pop(context)),
           const SizedBox(width: 12),
           Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                  color: theme.primary, borderRadius: BorderRadius.circular(6)),
+                  color: Colors.grey.shade800,
+                  borderRadius: BorderRadius.circular(6)),
               child:
                   const Icon(Icons.subtitles, color: Colors.white, size: 16)),
           const SizedBox(width: 12),
@@ -1060,10 +1056,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   child: TextField(
                     controller: _titleController,
                     autofocus: true,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                        color: theme.textPrimary),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 18),
                     decoration: const InputDecoration(
                         isDense: true, border: InputBorder.none),
                     onSubmitted: (v) => setState(() {
@@ -1084,10 +1078,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                     _isEditingTitle = true;
                   }),
                   child: Text(_title,
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                          color: theme.textPrimary)),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 18)),
                 ),
           const Spacer(),
           // ElevatedButton(
@@ -1113,10 +1105,9 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildSubtitleList() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
-      decoration:
-          BoxDecoration(border: Border(right: BorderSide(color: theme.border))),
+      decoration: BoxDecoration(
+          border: Border(right: BorderSide(color: Colors.grey.shade800))),
       child: Column(
         children: [
           _buildToolbar(),
@@ -1132,28 +1123,24 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildToolbar() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-          color: theme.surface,
-          border: Border(bottom: BorderSide(color: theme.border))),
+          border: Border(bottom: BorderSide(color: Colors.grey.shade800))),
       child: Row(
         children: [
           IconButton(
               icon: const Icon(Icons.undo, size: 18),
-              color:
-                  _undoStack.isNotEmpty ? theme.textSecondary : theme.textMuted,
+              color: _undoStack.isNotEmpty ? Colors.grey : Colors.grey.shade700,
               onPressed: _undoStack.isNotEmpty ? _undo : null),
           IconButton(
               icon: const Icon(Icons.redo, size: 18),
-              color:
-                  _redoStack.isNotEmpty ? theme.textSecondary : theme.textMuted,
+              color: _redoStack.isNotEmpty ? Colors.grey : Colors.grey.shade700,
               onPressed: _redoStack.isNotEmpty ? _redo : null),
           IconButton(
               icon: const Icon(Icons.delete_outline, size: 18),
-              color: theme.textSecondary,
+              color: Colors.grey,
               onPressed: _selectedCount > 0
                   ? () {
                       _pushUndo();
@@ -1184,7 +1171,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                 const SizedBox(width: 6),
                 DropdownButton<String>(
                   value: _selectedModel,
-                  dropdownColor: theme.dropdown,
+                  dropdownColor: const Color(0xFF1E1E2E),
                   underline: const SizedBox(),
                   isDense: true,
                   icon: Icon(Icons.expand_more,
@@ -1299,12 +1286,10 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildTableHeader() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-          color: theme.surface,
-          border: Border(bottom: BorderSide(color: theme.border))),
+          border: Border(bottom: BorderSide(color: Colors.grey.shade800))),
       child: Row(
         children: [
           SizedBox(
@@ -1317,17 +1302,17 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                         final selectAll = _selectedCount != _subtitles.length;
                         for (var s in _subtitles) s.selected = selectAll;
                       }))),
-          SizedBox(
+          const SizedBox(
               width: 120,
               child: Text('TIME',
                   style: TextStyle(
-                      color: theme.textMuted,
+                      color: Colors.grey,
                       fontSize: 11,
                       fontWeight: FontWeight.w600))),
-          Expanded(
+          const Expanded(
               child: Text('SUBTITLE TEXT',
                   style: TextStyle(
-                      color: theme.textMuted,
+                      color: Colors.grey,
                       fontSize: 11,
                       fontWeight: FontWeight.w600))),
           // const Expanded(
@@ -1350,7 +1335,6 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildSubtitleRow(SubtitleItem sub, int index) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     // Get or create GlobalKey for this row
     _rowKeys.putIfAbsent(sub.id, () => GlobalKey());
 
@@ -1365,13 +1349,14 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: BoxDecoration(
             color: sub.selected
-                ? theme.selected
-                : (_hoveredRowId == sub.id ? theme.hover : theme.surface),
+                ? const Color(0xFF111C30)
+                : (_hoveredRowId == sub.id ? const Color(0xFF0D1420) : null),
             border: Border(
                 left: BorderSide(
                     color: sub.selected ? Colors.blue : Colors.transparent,
                     width: 2),
-                bottom: BorderSide(color: theme.border)),
+                bottom:
+                    BorderSide(color: Colors.grey.shade800.withOpacity(0.5))),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1400,7 +1385,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   children: [
                     IconButton(
                         icon: const Icon(Icons.delete_outline, size: 16),
-                        color: theme.textSecondary,
+                        color: Colors.grey.shade600,
                         onPressed: () => _handleDelete(sub.id),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints()),
@@ -1422,7 +1407,6 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildEditableCell(SubtitleItem sub, String field, bool isTime) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     final key = '${sub.id}_$field';
     String value;
     switch (field) {
@@ -1453,8 +1437,10 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     }
 
     final textColor = isTime
-        ? theme.textSecondary
-        : (field == 'translatedText' ? theme.textSecondary : theme.textPrimary);
+        ? Colors.grey
+        : (field == 'translatedText'
+            ? Colors.grey.shade400
+            : Colors.grey.shade300);
 
     return Focus(
       onFocusChange: (hasFocus) {
@@ -1501,7 +1487,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
               decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300)),
+                  border: Border.all(color: Colors.grey.shade800)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: _videoInitialized && _videoController != null
@@ -1612,7 +1598,6 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   void _showExportDialog() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     String selectedFormat = 'SRT';
     bool mergeToVideo = false;
 
@@ -1620,13 +1605,13 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => Dialog(
-          backgroundColor: theme.dialog,
+          backgroundColor: const Color(0xFF161d2c),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Container(
             width: 480,
             decoration: BoxDecoration(
-              border: Border.all(color: theme.border),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -1635,21 +1620,23 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: theme.border)),
+                    border: Border(
+                        bottom:
+                            BorderSide(color: Colors.white.withOpacity(0.1))),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Export Options',
+                      const Text('Export Options',
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: theme.textPrimary)),
+                              color: Colors.white)),
                       const SizedBox(height: 4),
                       Text(
                           'Select the format and merge options for your subtitles.',
                           style: TextStyle(
-                              fontSize: 14, color: theme.textSecondary)),
+                              fontSize: 14, color: Colors.grey.shade400)),
                     ],
                   ),
                 ),
@@ -1658,13 +1645,13 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
+                      const Padding(
                         padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                         child: Text('Format',
                             style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: theme.textPrimary)),
+                                color: Colors.white)),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -1672,7 +1659,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                         child: Container(
                           height: 40,
                           decoration: BoxDecoration(
-                              color: theme.togglePanel,
+                              color: const Color(0xFF101622),
                               borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.all(4),
                           child: Row(
@@ -1684,7 +1671,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                                         child: Container(
                                           decoration: BoxDecoration(
                                             color: selectedFormat == format
-                                                ? theme.primary
+                                                ? const Color(0xFF2c3752)
                                                 : Colors.transparent,
                                             borderRadius:
                                                 BorderRadius.circular(6),
@@ -1697,7 +1684,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                                                   color: selectedFormat ==
                                                           format
                                                       ? Colors.white
-                                                      : theme.textSecondary)),
+                                                      : Colors.grey.shade400)),
                                         ),
                                       ),
                                     ))
@@ -1860,7 +1847,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F0FE).withOpacity(0.9),
+                    color: const Color(0xFF111722).withOpacity(0.6),
                     border: Border(
                         top: BorderSide(color: Colors.white.withOpacity(0.1))),
                     borderRadius: const BorderRadius.only(

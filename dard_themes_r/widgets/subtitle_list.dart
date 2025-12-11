@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/subtitle.dart';
-import '../main.dart';
-import '../theme/app_theme.dart';
 
 class SubtitleList extends StatelessWidget {
   final List<Subtitle> subtitles;
@@ -25,35 +23,32 @@ class SubtitleList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _buildHeader(context),
-        _buildTableHeader(context),
+        _buildHeader(),
+        _buildTableHeader(),
         Expanded(
           child: ListView.builder(
             itemCount: subtitles.length,
-            itemBuilder: (ctx, i) => _buildRow(ctx, i),
+            itemBuilder: (_, i) => _buildRow(i),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
+  Widget _buildHeader() {
     return Container(
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: theme.surface,
-        border: Border(bottom: BorderSide(color: theme.border)),
+        color: const Color(0xFF2D2D2D),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade800)),
       ),
       child: Row(
         children: [
-          Text('字幕列表',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, color: theme.textPrimary)),
+          const Text('字幕列表', style: TextStyle(fontWeight: FontWeight.bold)),
           const Spacer(),
           IconButton(
-            icon: Icon(Icons.add, size: 18, color: theme.textSecondary),
+            icon: const Icon(Icons.add, size: 18),
             onPressed: onAdd,
             tooltip: '添加字幕',
           ),
@@ -62,40 +57,27 @@ class SubtitleList extends StatelessWidget {
     );
   }
 
-  Widget _buildTableHeader(BuildContext context) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
+  Widget _buildTableHeader() {
     return Container(
       height: 32,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: theme.background,
-        border: Border(bottom: BorderSide(color: theme.border)),
+        color: const Color(0xFF252525),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade800)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          SizedBox(
-              width: 40,
-              child: Text('#',
-                  style: TextStyle(fontSize: 12, color: theme.textSecondary))),
-          SizedBox(
-              width: 90,
-              child: Text('开始',
-                  style: TextStyle(fontSize: 12, color: theme.textSecondary))),
-          SizedBox(
-              width: 90,
-              child: Text('结束',
-                  style: TextStyle(fontSize: 12, color: theme.textSecondary))),
-          Expanded(
-              child: Text('内容',
-                  style: TextStyle(fontSize: 12, color: theme.textSecondary))),
-          const SizedBox(width: 40),
+          SizedBox(width: 40, child: Text('#', style: TextStyle(fontSize: 12))),
+          SizedBox(width: 90, child: Text('开始', style: TextStyle(fontSize: 12))),
+          SizedBox(width: 90, child: Text('结束', style: TextStyle(fontSize: 12))),
+          Expanded(child: Text('内容', style: TextStyle(fontSize: 12))),
+          SizedBox(width: 40),
         ],
       ),
     );
   }
 
-  Widget _buildRow(BuildContext context, int index) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
+  Widget _buildRow(int index) {
     final sub = subtitles[index];
     final selected = index == selectedIndex;
     return InkWell(
@@ -104,31 +86,28 @@ class SubtitleList extends StatelessWidget {
         height: 36,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: selected ? theme.selected : null,
-          border: Border(bottom: BorderSide(color: theme.border)),
+          color: selected ? const Color(0xFF3A3A3A) : null,
+          border: Border(bottom: BorderSide(color: Colors.grey.shade800)),
         ),
         child: Row(
           children: [
             SizedBox(
               width: 40,
-              child: Text('${sub.index}',
-                  style: TextStyle(fontSize: 12, color: theme.textPrimary)),
+              child: Text('${sub.index}', style: const TextStyle(fontSize: 12)),
             ),
             SizedBox(
               width: 90,
-              child: Text(sub.startTimeStr,
-                  style: TextStyle(fontSize: 11, color: theme.textPrimary)),
+              child: Text(sub.startTimeStr, style: const TextStyle(fontSize: 11)),
             ),
             SizedBox(
               width: 90,
-              child: Text(sub.endTimeStr,
-                  style: TextStyle(fontSize: 11, color: theme.textPrimary)),
+              child: Text(sub.endTimeStr, style: const TextStyle(fontSize: 11)),
             ),
             Expanded(
               child: selected
                   ? TextField(
                       controller: TextEditingController(text: sub.text),
-                      style: TextStyle(fontSize: 12, color: theme.textPrimary),
+                      style: const TextStyle(fontSize: 12),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         isDense: true,
@@ -138,15 +117,14 @@ class SubtitleList extends StatelessWidget {
                     )
                   : Text(
                       sub.text,
-                      style: TextStyle(fontSize: 12, color: theme.textPrimary),
+                      style: const TextStyle(fontSize: 12),
                       overflow: TextOverflow.ellipsis,
                     ),
             ),
             SizedBox(
               width: 40,
               child: IconButton(
-                icon: Icon(Icons.delete_outline,
-                    size: 16, color: theme.textSecondary),
+                icon: const Icon(Icons.delete_outline, size: 16),
                 onPressed: () => onDelete(index),
               ),
             ),

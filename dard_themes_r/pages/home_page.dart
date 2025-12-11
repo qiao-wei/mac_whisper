@@ -5,13 +5,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:video_player/video_player.dart';
+import 'dart:ui' as ui;
 import '../models/project.dart';
 import '../services/database_service.dart';
 import '../services/binary_service.dart';
 // import 'editor_page.dart';
 import 'subtitle_editor_page.dart';
-import '../main.dart';
-import '../theme/app_theme.dart';
 
 class _DashedBorderPainter extends CustomPainter {
   final Color color;
@@ -177,11 +176,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showSettingsDialog() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: theme.settingsDialog,
+        backgroundColor: const Color(0xFF101622),
         child: Container(
           width: 800,
           constraints: const BoxConstraints(maxHeight: 700),
@@ -196,25 +194,24 @@ class _HomePageState extends State<HomePage> {
                         height: 96,
                         width: 96,
                         decoration: BoxDecoration(
-                          color: theme.featureBorder.withOpacity(0.5),
+                          color: const Color(0xFF1E293B).withOpacity(0.5),
                           border: Border.all(
-                              color: theme.featureBorder.withOpacity(0.8)),
+                              color: const Color(0xFF334155).withOpacity(0.8)),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(Icons.subtitles,
                             size: 48, color: Color(0xFF135BEC)),
                       ),
                       const SizedBox(height: 24),
-                      Text('MacWhisper',
+                      const Text('MacWhisper',
                           style: TextStyle(
                               fontSize: 48,
                               fontWeight: FontWeight.w900,
-                              letterSpacing: -2,
-                              color: theme.textPrimary)),
+                              letterSpacing: -2)),
                       const SizedBox(height: 8),
                       Text('Version $_appVersion',
-                          style: TextStyle(
-                              color: theme.textSecondary, fontSize: 18)),
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 18)),
                       const SizedBox(height: 16),
                       const Text(
                         'A powerful macOS app for effortless subtitle extraction, editing, and translation from any audio or video source.',
@@ -225,11 +222,9 @@ class _HomePageState extends State<HomePage> {
                             height: 1.5),
                       ),
                       const SizedBox(height: 48),
-                      Text('Core Features',
+                      const Text('Core Features',
                           style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: theme.textPrimary)),
+                              fontSize: 24, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 24),
                       GridView.count(
                         shrinkWrap: true,
@@ -240,37 +235,31 @@ class _HomePageState extends State<HomePage> {
                         childAspectRatio: 1.2,
                         children: [
                           _buildFeatureCard(
-                              context,
                               Icons.movie,
                               'Smart Extraction',
                               'Automatically generate accurate subtitles from audio and video files.',
                               true),
                           _buildFeatureCard(
-                              context,
                               Icons.edit_square,
                               'Intuitive Editing',
                               'Easily proofread, modify timings, and edit text content.',
                               true),
                           _buildFeatureCard(
-                              context,
                               Icons.desktop_mac,
                               'Native macOS Feel',
                               'A clean and fluid interface that perfectly integrates with macOS.',
                               true),
                           _buildFeatureCard(
-                              context,
                               Icons.merge_type,
                               'Video Merging',
                               'Seamlessly merge your finished subtitles back into the original video.',
                               false),
                           _buildFeatureCard(
-                              context,
                               Icons.link,
                               'URL Support',
                               'Extract content directly from web links to simplify your workflow.',
                               true),
                           _buildFeatureCard(
-                              context,
                               Icons.translate,
                               'One-Click Translation',
                               'Instantly translate your subtitles into multiple languages.',
@@ -281,7 +270,8 @@ class _HomePageState extends State<HomePage> {
                       Container(
                         padding: const EdgeInsets.only(top: 24),
                         decoration: BoxDecoration(
-                          border: Border(top: BorderSide(color: theme.border)),
+                          border: Border(
+                              top: BorderSide(color: Colors.grey.shade800)),
                         ),
                         child: const Text(
                             '© 2025 The MacWhisper Team. All Rights Reserved.',
@@ -306,14 +296,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFeatureCard(BuildContext context, IconData icon, String title,
-      String description, bool enabled) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
+  Widget _buildFeatureCard(
+      IconData icon, String title, String description, bool enabled) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.featureCard.withOpacity(0.7),
-        border: Border.all(color: theme.featureBorder),
+        color: const Color(0xFF0F172A).withOpacity(0.7),
+        border: Border.all(color: const Color(0xFF1E293B)),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -321,19 +310,20 @@ class _HomePageState extends State<HomePage> {
         children: [
           Icon(icon,
               size: 32,
-              color: enabled ? const Color(0xFF135BEC) : theme.textMuted),
+              color: enabled ? const Color(0xFF135BEC) : Colors.grey.shade700),
           const SizedBox(height: 12),
           Text(title,
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: enabled ? theme.textPrimary : theme.textMuted),
+                  color:
+                      enabled ? const Color(0xFFF1F5F9) : Colors.grey.shade600),
               textAlign: TextAlign.center),
           const SizedBox(height: 8),
           Text(description,
               style: TextStyle(
                   fontSize: 11,
-                  color: enabled ? theme.textSecondary : theme.textMuted),
+                  color: enabled ? Colors.grey : Colors.grey.shade700),
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis),
@@ -459,9 +449,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Scaffold(
-      backgroundColor: theme.background,
+      backgroundColor: const Color(0xFF0B0E14),
       body: Row(
         children: [
           _buildSidebar(),
@@ -475,8 +464,8 @@ class _HomePageState extends State<HomePage> {
                       duration: const Duration(milliseconds: 300),
                       width: _isRightPanelOpen ? 450 : 0,
                       decoration: BoxDecoration(
-                          border:
-                              Border(left: BorderSide(color: theme.border))),
+                          border: Border(
+                              left: BorderSide(color: Colors.grey.shade800))),
                       child: _isRightPanelOpen ? _buildNewProjectPanel() : null,
                     ),
                   ],
@@ -495,8 +484,8 @@ class _HomePageState extends State<HomePage> {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: theme.surface,
-                            border: Border.all(color: theme.border),
+                            color: const Color(0xFF1F2430),
+                            border: Border.all(color: Colors.grey.shade700),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -519,13 +508,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSidebar() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
       width: 256,
-      decoration: BoxDecoration(
-        color: theme.sidebarBg,
-        border: Border(right: BorderSide(color: theme.border)),
-      ),
+      color: const Color(0xFF080A0F),
       child: Column(
         children: [
           Padding(
@@ -543,11 +528,9 @@ class _HomePageState extends State<HomePage> {
                   child: const Icon(Icons.mic, color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 12),
-                Text('MacWhisper',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: theme.textPrimary)),
+                const Text('MacWhisper',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               ],
             ),
           ),
@@ -556,48 +539,6 @@ class _HomePageState extends State<HomePage> {
           _buildMenuItem('In Progress', Icons.access_time),
           _buildMenuItem('Completed', Icons.check_circle_outline),
           const Spacer(),
-          // Theme toggle button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () {
-                  MacWhisperApp.of(context)?.toggleTheme();
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: theme.hover,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        MacWhisperApp.of(context)?.isDark == true
-                            ? Icons.light_mode
-                            : Icons.dark_mode,
-                        size: 20,
-                        color: theme.textSecondary,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        MacWhisperApp.of(context)?.isDark == true
-                            ? 'Light Mode'
-                            : 'Dark Mode',
-                        style: TextStyle(
-                          color: theme.textPrimary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Text(_appVersion,
@@ -609,7 +550,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMenuItem(String name, IconData icon) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     final isActive = _activeTab == name;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -625,12 +565,11 @@ class _HomePageState extends State<HomePage> {
           child: Row(
             children: [
               Icon(icon,
-                  size: 20,
-                  color: isActive ? Colors.white : theme.textSecondary),
+                  size: 20, color: isActive ? Colors.white : Colors.grey),
               const SizedBox(width: 12),
               Text(name,
                   style: TextStyle(
-                      color: isActive ? Colors.white : theme.textPrimary,
+                      color: isActive ? Colors.white : Colors.grey,
                       fontWeight: FontWeight.w500)),
             ],
           ),
@@ -640,7 +579,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildMainContent() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -649,21 +587,18 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               IconButton(
-                  icon:
-                      Icon(Icons.refresh, color: theme.textSecondary, size: 18),
+                  icon: const Icon(Icons.refresh, color: Colors.grey, size: 18),
                   onPressed: _loadProjects),
               IconButton(
-                  icon: Icon(Icons.settings,
-                      color: theme.textSecondary, size: 18),
+                  icon:
+                      const Icon(Icons.settings, color: Colors.grey, size: 18),
                   onPressed: _showSettingsDialog),
             ],
           ),
           const SizedBox(height: 24),
           Text(_activeTab,
-              style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  color: theme.textPrimary)),
+              style:
+                  const TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
           const SizedBox(height: 24),
           Row(
             children: [
@@ -671,17 +606,17 @@ class _HomePageState extends State<HomePage> {
                 child: Container(
                   height: 44,
                   decoration: BoxDecoration(
-                      color: theme.surface,
+                      color: const Color(0xFF13161F),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: theme.border)),
+                      border: Border.all(color: Colors.grey.shade800)),
                   child: TextField(
                     onChanged: (v) => setState(() => _searchQuery = v),
-                    style: TextStyle(fontSize: 14, color: theme.textPrimary),
-                    decoration: InputDecoration(
+                    style: const TextStyle(fontSize: 14),
+                    decoration: const InputDecoration(
                       hintText: 'Search projects by name...',
-                      hintStyle: TextStyle(color: theme.textMuted),
+                      hintStyle: TextStyle(color: Colors.grey),
                       prefixIcon:
-                          Icon(Icons.search, size: 18, color: theme.textMuted),
+                          Icon(Icons.search, size: 18, color: Colors.grey),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(vertical: 12),
                     ),
@@ -700,13 +635,13 @@ class _HomePageState extends State<HomePage> {
                     height: 44,
                     width: 44,
                     decoration: BoxDecoration(
-                        color: theme.surface,
+                        color: const Color(0xFF13161F),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: theme.border)),
+                        border: Border.all(color: Colors.grey.shade800)),
                     child: Icon(
                         _sortAsc ? Icons.arrow_upward : Icons.arrow_downward,
                         size: 18,
-                        color: theme.textSecondary),
+                        color: Colors.grey),
                   ),
                 ),
               ),
@@ -725,20 +660,20 @@ class _HomePageState extends State<HomePage> {
                             offset.dy + box.size.height,
                             offset.dx + box.size.width,
                             0),
-                        color: theme.surface,
+                        color: const Color(0xFF1F2430),
                         items: [
-                          PopupMenuItem(
+                          const PopupMenuItem(
                               value: 'modified',
                               child: Text('Last Modified',
-                                  style: TextStyle(color: theme.textPrimary))),
-                          PopupMenuItem(
+                                  style: TextStyle(color: Colors.white))),
+                          const PopupMenuItem(
                               value: 'created',
                               child: Text('Creation Time',
-                                  style: TextStyle(color: theme.textPrimary))),
-                          PopupMenuItem(
+                                  style: TextStyle(color: Colors.white))),
+                          const PopupMenuItem(
                               value: 'name',
                               child: Text('Name',
-                                  style: TextStyle(color: theme.textPrimary))),
+                                  style: TextStyle(color: Colors.white))),
                         ],
                       );
                       if (result != null) {
@@ -750,18 +685,18 @@ class _HomePageState extends State<HomePage> {
                       height: 44,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                          color: theme.surface,
+                          color: const Color(0xFF13161F),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: theme.border)),
+                          border: Border.all(color: Colors.grey.shade800)),
                       child: Row(
                         children: [
                           Text(
                               'Sort by: ${_sortBy == 'modified' ? 'Last Modified' : _sortBy == 'created' ? 'Creation Time' : 'Name'}',
-                              style: TextStyle(
-                                  fontSize: 14, color: theme.textSecondary)),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.grey)),
                           const SizedBox(width: 8),
-                          Icon(Icons.keyboard_arrow_down,
-                              size: 16, color: theme.textSecondary),
+                          const Icon(Icons.keyboard_arrow_down,
+                              size: 16, color: Colors.grey),
                         ],
                       ),
                     ),
@@ -821,21 +756,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildNewProjectPanel() {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
-      color: theme.surface,
+      color: const Color(0xFF0F1219),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Start a New Project',
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: theme.textPrimary)),
+          const Text('Start a New Project',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text('Get started by uploading a file or pasting a link below',
-              style: TextStyle(color: theme.textSecondary, fontSize: 14),
+          const Text('Get started by uploading a file or pasting a link below',
+              style: TextStyle(color: Colors.grey, fontSize: 14),
               textAlign: TextAlign.center),
           const SizedBox(height: 32),
           DropTarget(
@@ -847,12 +778,15 @@ class _HomePageState extends State<HomePage> {
             },
             child: CustomPaint(
               painter: _DashedBorderPainter(
-                  color: _isDragging ? Colors.blue : theme.border, radius: 20),
+                  color: _isDragging ? Colors.blue : Colors.grey.shade700,
+                  radius: 20),
               child: Container(
                 constraints: const BoxConstraints(minHeight: 220),
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                    color: _isDragging ? theme.selected : theme.surface,
+                    color: _isDragging
+                        ? const Color(0xFF1A2332)
+                        : const Color(0xFF13161F),
                     borderRadius: BorderRadius.circular(20)),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -861,14 +795,14 @@ class _HomePageState extends State<HomePage> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                          color:
-                              _isDragging ? Colors.blue.shade800 : theme.hover,
+                          color: _isDragging
+                              ? Colors.blue.shade800
+                              : Colors.grey.shade800,
                           borderRadius: BorderRadius.circular(8)),
                       child: Icon(Icons.cloud_upload_outlined,
                           size: 24,
-                          color: _isDragging
-                              ? Colors.blue.shade200
-                              : theme.textSecondary),
+                          color:
+                              _isDragging ? Colors.blue.shade200 : Colors.grey),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -878,11 +812,12 @@ class _HomePageState extends State<HomePage> {
                         style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: _isDragging
-                                ? Colors.blue.shade700
-                                : theme.textSecondary)),
+                                ? Colors.blue.shade200
+                                : Colors.grey.shade200)),
                     const SizedBox(height: 8),
                     Text('Supports MP3, WAV, MP4, MOV, etc.',
-                        style: TextStyle(color: theme.textMuted, fontSize: 12)),
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 12)),
                     const SizedBox(height: 24),
                     MouseRegion(
                       cursor: SystemMouseCursors.click,
@@ -892,14 +827,12 @@ class _HomePageState extends State<HomePage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 8),
                           decoration: BoxDecoration(
-                              color: theme.hover,
+                              color: Colors.grey.shade800,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: theme.border)),
-                          child: Text('Choose File',
+                              border: Border.all(color: Colors.grey.shade700)),
+                          child: const Text('Choose File',
                               style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: theme.textPrimary)),
+                                  fontSize: 14, fontWeight: FontWeight.w500)),
                         ),
                       ),
                     ),
@@ -911,38 +844,40 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: Container(height: 1, color: theme.divider)),
-              Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('or', style: TextStyle(color: theme.textMuted))),
-              Expanded(child: Container(height: 1, color: theme.divider)),
+              Expanded(
+                  child: Container(height: 1, color: Colors.grey.shade800)),
+              const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('or', style: TextStyle(color: Colors.grey))),
+              Expanded(
+                  child: Container(height: 1, color: Colors.grey.shade800)),
             ],
           ),
           const SizedBox(height: 24),
-          Align(
+          const Align(
               alignment: Alignment.centerLeft,
               child: Text('Paste Audio/Video Link',
                   style: TextStyle(
-                      color: theme.textMuted,
+                      color: Colors.grey,
                       fontSize: 12,
                       fontWeight: FontWeight.w500))),
           const SizedBox(height: 8),
           Container(
             height: 48,
             decoration: BoxDecoration(
-                color: theme.surface,
+                color: const Color(0xFF13161F),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: theme.border)),
+                border: Border.all(color: Colors.grey.shade700)),
             child: TextField(
               controller: _urlController,
-              style: TextStyle(fontSize: 14, color: theme.textPrimary),
+              style: const TextStyle(fontSize: 14),
               enabled: !_isDownloading,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                   hintText: 'https://',
-                  hintStyle: TextStyle(color: theme.textMuted),
+                  hintStyle: TextStyle(color: Colors.grey),
                   border: InputBorder.none,
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 14)),
             ),
           ),
           const SizedBox(height: 16),
@@ -1058,7 +993,6 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     final project = widget.project;
     final isVideo =
         project.name.endsWith('.mp4') || project.name.endsWith('.mov');
@@ -1078,19 +1012,21 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: widget.isSelected ? theme.projectSelected : theme.surface,
+            color: widget.isSelected
+                ? const Color(0xFF1A1E29)
+                : const Color(0xFF13161F),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
                 color: widget.isSelected
                     ? Colors.blue
-                    : (_isHovered ? theme.border : Colors.transparent)),
+                    : (_isHovered ? Colors.grey.shade700 : Colors.transparent)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                    color: theme.iconContainer.withOpacity(0.5),
+                    color: Colors.grey.shade800.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(8)),
                 child: Icon(isVideo ? Icons.movie : Icons.music_note,
                     color: isVideo ? Colors.blue : Colors.purple, size: 24),
@@ -1127,14 +1063,13 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
                             onDoubleTap: () =>
                                 setState(() => _isEditingName = true),
                             child: Text(_nameController.text,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.textPrimary)),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
                           ),
                     const SizedBox(height: 4),
                     Text(_fileInfo,
-                        style: TextStyle(
-                            color: theme.textSecondary, fontSize: 12)),
+                        style:
+                            const TextStyle(color: Colors.grey, fontSize: 12)),
                   ],
                 ),
               ),
