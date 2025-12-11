@@ -1180,7 +1180,11 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.memory, size: 14, color: Colors.purple.shade300),
+                Icon(Icons.memory,
+                    size: 14,
+                    color: theme.isDark
+                        ? Colors.purple.shade300
+                        : Colors.purple.shade700),
                 const SizedBox(width: 6),
                 DropdownButton<String>(
                   value: _selectedModel,
@@ -1188,13 +1192,18 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   underline: const SizedBox(),
                   isDense: true,
                   icon: Icon(Icons.expand_more,
-                      size: 16, color: Colors.purple.shade300),
+                      size: 16,
+                      color: theme.isDark
+                          ? Colors.purple.shade300
+                          : Colors.purple.shade700),
                   items: _models
                       .map((m) => DropdownMenuItem(
                           value: m,
                           child: Text(m.toUpperCase(),
                               style: TextStyle(
-                                  color: Colors.purple.shade100,
+                                  color: theme.isDark
+                                      ? Colors.purple.shade100
+                                      : Colors.purple.shade700,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 12,
                                   letterSpacing: 0.5))))
@@ -1685,7 +1694,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                                         child: Container(
                                           decoration: BoxDecoration(
                                             color: selectedFormat == format
-                                                ? theme.primary
+                                                ? theme.formatSelected
                                                 : Colors.transparent,
                                             borderRadius:
                                                 BorderRadius.circular(6),
@@ -1861,9 +1870,9 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F0FE).withOpacity(0.9),
-                    border: Border(
-                        top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                    color:
+                        theme.buttonRow.withOpacity(theme.isDark ? 0.6 : 1.0),
+                    border: Border(top: BorderSide(color: theme.border)),
                     borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(12),
                         bottomRight: Radius.circular(12)),
@@ -1873,8 +1882,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel',
-                            style: TextStyle(color: Colors.white)),
+                        child: Text('Cancel',
+                            style: TextStyle(color: theme.textPrimary)),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton(

@@ -12,6 +12,8 @@ class AppColors {
   static const lightHover = Color(0xFFF0F4FF);
   static const lightSelected = Color(0xFFE8F0FE);
   static const lightDivider = Color(0xFFE5E7EB);
+  static const lightTogglePanel =
+      Color(0xFFE5E7EB); // Light grey for toggle panel
 
   // Dark theme colors (from dard_themes_r reference)
   static const darkBackground = Color(0xFF0F1115); // Main scaffold
@@ -26,15 +28,18 @@ class AppColors {
   static const darkProjectSelected =
       Color(0xFF1A1E29); // Project list item selected
   static const darkDivider = Color(0xFF4B5563);
-  static const darkDropdown = Color(0xFF1E1E2E); // Dropdown menus
+  static const darkDropdown =
+      Color(0xFF2D3748); // Dropdown menus (visible grey)
   static const darkDialog = Color(0xFF161D2C); // Dialog backgrounds
   static const darkSettingsDialog = Color(0xFF101622); // Settings dialog bg
   static const darkFeatureCard = Color(0xFF0F172A); // Feature card bg
   static const darkFeatureBorder = Color(0xFF1E293B); // Feature card border
-  static const darkTogglePanel = Color(0xFF1E2029); // Toggle panel backgrounds
+  static const darkTogglePanel = Color(0xFF101622); // Toggle panel backgrounds
+  static const darkFormatSelected = Color(0xFF2C3752); // Selected format button
   static const darkInputField = Color(0xFF101622); // Input field backgrounds
   static const darkIconContainer =
       Color(0xFF374151); // grey.shade700 equivalent
+  static const darkButtonRow = Color(0xFF111722); // Button row background
 
   // Shared colors
   static const primary = Color(0xFF2563EB);
@@ -91,9 +96,13 @@ class AppTheme {
   Color get featureBorder =>
       isDark ? AppColors.darkFeatureBorder : AppColors.lightBorder;
   Color get togglePanel =>
-      isDark ? AppColors.darkTogglePanel : AppColors.lightSurface;
+      isDark ? AppColors.darkTogglePanel : AppColors.lightTogglePanel;
   Color get inputField =>
       isDark ? AppColors.darkInputField : AppColors.lightSurface;
+  Color get formatSelected =>
+      isDark ? AppColors.darkFormatSelected : AppColors.primary;
+  Color get buttonRow =>
+      isDark ? AppColors.darkButtonRow : AppColors.lightSurface;
 
   // Video player colors (always dark themed for video)
   Color get videoBackground => Colors.black;

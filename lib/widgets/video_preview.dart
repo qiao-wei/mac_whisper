@@ -277,7 +277,7 @@ class _VideoPreviewState extends State<VideoPreview> {
                                 height: 4,
                                 width: constraints.maxWidth * progress,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF2563EB),
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
