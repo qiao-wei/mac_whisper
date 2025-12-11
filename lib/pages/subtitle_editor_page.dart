@@ -987,8 +987,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                                     color: _isDraggingDivider
                                         ? Colors.blue.withOpacity(0.6)
                                         : _isHoveringDivider
-                                            ? Colors.grey.shade400
-                                            : Colors.grey.shade300,
+                                            ? theme.textSecondary
+                                            : theme.border,
                                     borderRadius: BorderRadius.circular(1),
                                   ),
                                 ),
@@ -1010,8 +1010,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                                color: const Color(0xFFFFFFFF),
-                                border: Border.all(color: Colors.grey.shade300),
+                                color: theme.surface,
+                                border: Border.all(color: theme.border),
                                 shape: BoxShape.circle),
                             child: Icon(
                                 _showPreview
@@ -1492,6 +1492,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   }
 
   Widget _buildPreviewPanel() {
+    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -1501,7 +1502,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
               decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300)),
+                  border: Border.all(color: theme.border)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: _videoInitialized && _videoController != null

@@ -55,9 +55,9 @@ class AppTheme {
   Color get surfaceLight =>
       isDark ? AppColors.darkSurfaceLight : AppColors.lightSurface;
 
-  // Border colors
+  // Border colors (all borders use the same color for consistency)
   Color get border => isDark ? AppColors.darkBorder : AppColors.lightBorder;
-  Color get divider => isDark ? AppColors.darkDivider : AppColors.lightDivider;
+  Color get divider => border; // Use same as border for consistency
 
   // Text colors
   Color get textPrimary =>
