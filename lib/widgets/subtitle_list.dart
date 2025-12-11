@@ -40,8 +40,8 @@ class SubtitleList extends StatelessWidget {
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF2D2D2D),
-        border: Border(bottom: BorderSide(color: Colors.grey.shade800)),
+        color: const Color(0xFFFFFFFF),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
       child: Row(
         children: [
@@ -62,14 +62,16 @@ class SubtitleList extends StatelessWidget {
       height: 32,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF252525),
-        border: Border(bottom: BorderSide(color: Colors.grey.shade800)),
+        color: const Color(0xFFF5F5F7),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
       child: const Row(
         children: [
           SizedBox(width: 40, child: Text('#', style: TextStyle(fontSize: 12))),
-          SizedBox(width: 90, child: Text('开始', style: TextStyle(fontSize: 12))),
-          SizedBox(width: 90, child: Text('结束', style: TextStyle(fontSize: 12))),
+          SizedBox(
+              width: 90, child: Text('开始', style: TextStyle(fontSize: 12))),
+          SizedBox(
+              width: 90, child: Text('结束', style: TextStyle(fontSize: 12))),
           Expanded(child: Text('内容', style: TextStyle(fontSize: 12))),
           SizedBox(width: 40),
         ],
@@ -86,8 +88,8 @@ class SubtitleList extends StatelessWidget {
         height: 36,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF3A3A3A) : null,
-          border: Border(bottom: BorderSide(color: Colors.grey.shade800)),
+          color: selected ? const Color(0xFFE8F0FE) : null,
+          border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
         ),
         child: Row(
           children: [
@@ -97,7 +99,8 @@ class SubtitleList extends StatelessWidget {
             ),
             SizedBox(
               width: 90,
-              child: Text(sub.startTimeStr, style: const TextStyle(fontSize: 11)),
+              child:
+                  Text(sub.startTimeStr, style: const TextStyle(fontSize: 11)),
             ),
             SizedBox(
               width: 90,

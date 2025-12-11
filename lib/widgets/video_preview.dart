@@ -144,7 +144,7 @@ class _VideoPreviewState extends State<VideoPreview> {
         onTap: () => _focusNode.requestFocus(),
         onDoubleTap: widget.initialized ? _enterFullscreen : null,
         child: Container(
-          color: Colors.black,
+          color: const Color(0xFFF5F5F7),
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -203,18 +203,15 @@ class _VideoPreviewState extends State<VideoPreview> {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
-            ),
+            color: const Color(0xFFFFFFFF),
+            border: Border(top: BorderSide(color: Colors.grey.shade300)),
           ),
           child: Row(
             children: [
               IconButton(
                 icon: Icon(
                   value.isPlaying ? Icons.pause : Icons.play_arrow,
-                  color: Colors.white,
+                  color: const Color(0xFF374151),
                 ),
                 onPressed: () {
                   value.isPlaying
@@ -227,7 +224,7 @@ class _VideoPreviewState extends State<VideoPreview> {
               const SizedBox(width: 8),
               Text(
                 _formatDuration(value.position),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+                style: const TextStyle(color: Color(0xFF374151), fontSize: 12),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -269,7 +266,7 @@ class _VideoPreviewState extends State<VideoPreview> {
                                 height: 4,
                                 width: constraints.maxWidth,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade700,
+                                  color: Colors.grey.shade300,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -277,7 +274,7 @@ class _VideoPreviewState extends State<VideoPreview> {
                                 height: 4,
                                 width: constraints.maxWidth * progress,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: const Color(0xFF2563EB),
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -292,11 +289,11 @@ class _VideoPreviewState extends State<VideoPreview> {
               const SizedBox(width: 12),
               Text(
                 _formatDuration(value.duration),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+                style: const TextStyle(color: Color(0xFF374151), fontSize: 12),
               ),
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.fullscreen, color: Colors.white),
+                icon: const Icon(Icons.fullscreen, color: Color(0xFF374151)),
                 onPressed: widget.initialized ? _enterFullscreen : null,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),

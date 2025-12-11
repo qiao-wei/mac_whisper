@@ -13,11 +13,11 @@ class MacWhisperApp extends StatelessWidget {
     return MaterialApp(
       title: 'MacWhisper',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF1E1E1E),
-        colorScheme: const ColorScheme.dark(
+      theme: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: const Color(0xFFF5F5F7),
+        colorScheme: const ColorScheme.light(
           primary: Color(0xFF007AFF),
-          surface: Color(0xFF2D2D2D),
+          surface: Color(0xFFFFFFFF),
         ),
       ),
       home: Builder(

@@ -179,7 +179,7 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: const Color(0xFF101622),
+        backgroundColor: const Color(0xFFFFFFFF),
         child: Container(
           width: 800,
           constraints: const BoxConstraints(maxHeight: 700),
@@ -190,19 +190,6 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(48),
                   child: Column(
                     children: [
-                      Container(
-                        height: 96,
-                        width: 96,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1E293B).withOpacity(0.5),
-                          border: Border.all(
-                              color: const Color(0xFF334155).withOpacity(0.8)),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(Icons.subtitles,
-                            size: 48, color: Color(0xFF135BEC)),
-                      ),
-                      const SizedBox(height: 24),
                       const Text('MacWhisper',
                           style: TextStyle(
                               fontSize: 48,
@@ -271,7 +258,7 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.only(top: 24),
                         decoration: BoxDecoration(
                           border: Border(
-                              top: BorderSide(color: Colors.grey.shade800)),
+                              top: BorderSide(color: Colors.grey.shade300)),
                         ),
                         child: const Text(
                             '© 2025 The MacWhisper Team. All Rights Reserved.',
@@ -301,8 +288,8 @@ class _HomePageState extends State<HomePage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A).withOpacity(0.7),
-        border: Border.all(color: const Color(0xFF1E293B)),
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -310,20 +297,19 @@ class _HomePageState extends State<HomePage> {
         children: [
           Icon(icon,
               size: 32,
-              color: enabled ? const Color(0xFF135BEC) : Colors.grey.shade700),
+              color: enabled ? const Color(0xFF135BEC) : Colors.grey.shade400),
           const SizedBox(height: 12),
           Text(title,
               style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color:
-                      enabled ? const Color(0xFFF1F5F9) : Colors.grey.shade600),
+                  color: enabled ? Colors.grey.shade800 : Colors.grey.shade400),
               textAlign: TextAlign.center),
           const SizedBox(height: 8),
           Text(description,
               style: TextStyle(
                   fontSize: 11,
-                  color: enabled ? Colors.grey : Colors.grey.shade700),
+                  color: enabled ? Colors.grey.shade600 : Colors.grey.shade400),
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis),
@@ -450,7 +436,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: const Color(0xFFF5F5F7),
       body: Row(
         children: [
           _buildSidebar(),
@@ -465,7 +451,7 @@ class _HomePageState extends State<HomePage> {
                       width: _isRightPanelOpen ? 450 : 0,
                       decoration: BoxDecoration(
                           border: Border(
-                              left: BorderSide(color: Colors.grey.shade800))),
+                              left: BorderSide(color: Colors.grey.shade300))),
                       child: _isRightPanelOpen ? _buildNewProjectPanel() : null,
                     ),
                   ],
@@ -484,8 +470,8 @@ class _HomePageState extends State<HomePage> {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1F2430),
-                            border: Border.all(color: Colors.grey.shade700),
+                            color: const Color(0xFFFFFFFF),
+                            border: Border.all(color: Colors.grey.shade300),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -510,7 +496,10 @@ class _HomePageState extends State<HomePage> {
   Widget _buildSidebar() {
     return Container(
       width: 256,
-      color: const Color(0xFF080A0F),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        border: Border(right: BorderSide(color: Colors.grey.shade300)),
+      ),
       child: Column(
         children: [
           Padding(
@@ -529,8 +518,10 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(width: 12),
                 const Text('MacWhisper',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Color(0xFF1F2937))),
               ],
             ),
           ),
@@ -565,11 +556,12 @@ class _HomePageState extends State<HomePage> {
           child: Row(
             children: [
               Icon(icon,
-                  size: 20, color: isActive ? Colors.white : Colors.grey),
+                  size: 20,
+                  color: isActive ? Colors.white : const Color(0xFF6B7280)),
               const SizedBox(width: 12),
               Text(name,
                   style: TextStyle(
-                      color: isActive ? Colors.white : Colors.grey,
+                      color: isActive ? Colors.white : const Color(0xFF374151),
                       fontWeight: FontWeight.w500)),
             ],
           ),
@@ -606,9 +598,9 @@ class _HomePageState extends State<HomePage> {
                 child: Container(
                   height: 44,
                   decoration: BoxDecoration(
-                      color: const Color(0xFF13161F),
+                      color: const Color(0xFFFFFFFF),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade800)),
+                      border: Border.all(color: Colors.grey.shade300)),
                   child: TextField(
                     onChanged: (v) => setState(() => _searchQuery = v),
                     style: const TextStyle(fontSize: 14),
@@ -635,9 +627,9 @@ class _HomePageState extends State<HomePage> {
                     height: 44,
                     width: 44,
                     decoration: BoxDecoration(
-                        color: const Color(0xFF13161F),
+                        color: const Color(0xFFFFFFFF),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade800)),
+                        border: Border.all(color: Colors.grey.shade300)),
                     child: Icon(
                         _sortAsc ? Icons.arrow_upward : Icons.arrow_downward,
                         size: 18,
@@ -660,7 +652,7 @@ class _HomePageState extends State<HomePage> {
                             offset.dy + box.size.height,
                             offset.dx + box.size.width,
                             0),
-                        color: const Color(0xFF1F2430),
+                        color: const Color(0xFFFFFFFF),
                         items: [
                           const PopupMenuItem(
                               value: 'modified',
@@ -685,9 +677,9 @@ class _HomePageState extends State<HomePage> {
                       height: 44,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                          color: const Color(0xFF13161F),
+                          color: const Color(0xFFFFFFFF),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey.shade800)),
+                          border: Border.all(color: Colors.grey.shade300)),
                       child: Row(
                         children: [
                           Text(
@@ -757,13 +749,16 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildNewProjectPanel() {
     return Container(
-      color: const Color(0xFF0F1219),
+      color: const Color(0xFFFFFFFF),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text('Start a New Project',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937))),
           const SizedBox(height: 8),
           const Text('Get started by uploading a file or pasting a link below',
               style: TextStyle(color: Colors.grey, fontSize: 14),
@@ -778,15 +773,15 @@ class _HomePageState extends State<HomePage> {
             },
             child: CustomPaint(
               painter: _DashedBorderPainter(
-                  color: _isDragging ? Colors.blue : Colors.grey.shade700,
+                  color: _isDragging ? Colors.blue : Colors.grey.shade400,
                   radius: 20),
               child: Container(
                 constraints: const BoxConstraints(minHeight: 220),
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
                     color: _isDragging
-                        ? const Color(0xFF1A2332)
-                        : const Color(0xFF13161F),
+                        ? const Color(0xFFE8F0FE)
+                        : const Color(0xFFFFFFFF),
                     borderRadius: BorderRadius.circular(20)),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -797,7 +792,7 @@ class _HomePageState extends State<HomePage> {
                       decoration: BoxDecoration(
                           color: _isDragging
                               ? Colors.blue.shade800
-                              : Colors.grey.shade800,
+                              : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(8)),
                       child: Icon(Icons.cloud_upload_outlined,
                           size: 24,
@@ -812,8 +807,8 @@ class _HomePageState extends State<HomePage> {
                         style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: _isDragging
-                                ? Colors.blue.shade200
-                                : Colors.grey.shade200)),
+                                ? Colors.blue.shade700
+                                : Colors.grey.shade700)),
                     const SizedBox(height: 8),
                     Text('Supports MP3, WAV, MP4, MOV, etc.',
                         style: TextStyle(
@@ -827,12 +822,14 @@ class _HomePageState extends State<HomePage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 8),
                           decoration: BoxDecoration(
-                              color: Colors.grey.shade800,
+                              color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey.shade700)),
+                              border: Border.all(color: Colors.grey.shade400)),
                           child: const Text('Choose File',
                               style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w500)),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF374151))),
                         ),
                       ),
                     ),
@@ -845,12 +842,12 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               Expanded(
-                  child: Container(height: 1, color: Colors.grey.shade800)),
+                  child: Container(height: 1, color: Colors.grey.shade300)),
               const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   child: Text('or', style: TextStyle(color: Colors.grey))),
               Expanded(
-                  child: Container(height: 1, color: Colors.grey.shade800)),
+                  child: Container(height: 1, color: Colors.grey.shade300)),
             ],
           ),
           const SizedBox(height: 24),
@@ -865,9 +862,9 @@ class _HomePageState extends State<HomePage> {
           Container(
             height: 48,
             decoration: BoxDecoration(
-                color: const Color(0xFF13161F),
+                color: const Color(0xFFFFFFFF),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade700)),
+                border: Border.all(color: Colors.grey.shade300)),
             child: TextField(
               controller: _urlController,
               style: const TextStyle(fontSize: 14),
@@ -1013,20 +1010,20 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: widget.isSelected
-                ? const Color(0xFF1A1E29)
-                : const Color(0xFF13161F),
+                ? const Color(0xFFE8F0FE)
+                : const Color(0xFFFFFFFF),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
                 color: widget.isSelected
                     ? Colors.blue
-                    : (_isHovered ? Colors.grey.shade700 : Colors.transparent)),
+                    : (_isHovered ? Colors.grey.shade300 : Colors.transparent)),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                    color: Colors.grey.shade800.withOpacity(0.5),
+                    color: Colors.grey.shade300.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(8)),
                 child: Icon(isVideo ? Icons.movie : Icons.music_note,
                     color: isVideo ? Colors.blue : Colors.purple, size: 24),

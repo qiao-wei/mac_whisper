@@ -18,10 +18,10 @@ class Timeline extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 100,
-      color: const Color(0xFF252525),
+      color: const Color(0xFFF5F5F7),
       child: Column(
         children: [
-          Container(height: 1, color: Colors.grey.shade800),
+          Container(height: 1, color: Colors.grey.shade300),
           Expanded(
             child: initialized
                 ? ValueListenableBuilder(
@@ -46,7 +46,8 @@ class Timeline extends StatelessWidget {
         return GestureDetector(
           onTapDown: (details) {
             final ratio = details.localPosition.dx / width;
-            controller.seekTo(Duration(milliseconds: (duration * ratio).toInt()));
+            controller
+                .seekTo(Duration(milliseconds: (duration * ratio).toInt()));
           },
           child: Stack(
             children: [

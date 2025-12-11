@@ -913,7 +913,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: const Color(0xFFF5F5F7),
       body: Column(
         children: [
           _buildHeader(),
@@ -984,8 +984,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                                     color: _isDraggingDivider
                                         ? Colors.blue.withOpacity(0.6)
                                         : _isHoveringDivider
-                                            ? Colors.grey.shade600
-                                            : Colors.grey.shade800,
+                                            ? Colors.grey.shade400
+                                            : Colors.grey.shade300,
                                     borderRadius: BorderRadius.circular(1),
                                   ),
                                 ),
@@ -1007,8 +1007,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                                color: const Color(0xFF1E2029),
-                                border: Border.all(color: Colors.grey.shade700),
+                                color: const Color(0xFFFFFFFF),
+                                border: Border.all(color: Colors.grey.shade300),
                                 shape: BoxShape.circle),
                             child: Icon(
                                 _showPreview
@@ -1035,7 +1035,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey.shade800))),
+          border: Border(bottom: BorderSide(color: Colors.grey.shade300))),
       child: Row(
         children: [
           IconButton(
@@ -1107,7 +1107,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   Widget _buildSubtitleList() {
     return Container(
       decoration: BoxDecoration(
-          border: Border(right: BorderSide(color: Colors.grey.shade800))),
+          border: Border(right: BorderSide(color: Colors.grey.shade300))),
       child: Column(
         children: [
           _buildToolbar(),
@@ -1127,7 +1127,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey.shade800))),
+          border: Border(bottom: BorderSide(color: Colors.grey.shade300))),
       child: Row(
         children: [
           IconButton(
@@ -1171,7 +1171,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                 const SizedBox(width: 6),
                 DropdownButton<String>(
                   value: _selectedModel,
-                  dropdownColor: const Color(0xFF1E1E2E),
+                  dropdownColor: const Color(0xFFFFFFFF),
                   underline: const SizedBox(),
                   isDense: true,
                   icon: Icon(Icons.expand_more,
@@ -1289,7 +1289,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey.shade800))),
+          border: Border(bottom: BorderSide(color: Colors.grey.shade300))),
       child: Row(
         children: [
           SizedBox(
@@ -1349,14 +1349,14 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: BoxDecoration(
             color: sub.selected
-                ? const Color(0xFF111C30)
-                : (_hoveredRowId == sub.id ? const Color(0xFF0D1420) : null),
+                ? const Color(0xFFE8F0FE)
+                : (_hoveredRowId == sub.id ? const Color(0xFFF0F4FF) : null),
             border: Border(
                 left: BorderSide(
                     color: sub.selected ? Colors.blue : Colors.transparent,
                     width: 2),
                 bottom:
-                    BorderSide(color: Colors.grey.shade800.withOpacity(0.5))),
+                    BorderSide(color: Colors.grey.shade300.withOpacity(0.5))),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1437,10 +1437,10 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     }
 
     final textColor = isTime
-        ? Colors.grey
+        ? const Color(0xFF6B7280)
         : (field == 'translatedText'
-            ? Colors.grey.shade400
-            : Colors.grey.shade300);
+            ? const Color(0xFF6B7280)
+            : const Color(0xFF1F2937));
 
     return Focus(
       onFocusChange: (hasFocus) {
@@ -1487,7 +1487,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
               decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade800)),
+                  border: Border.all(color: Colors.grey.shade300)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: _videoInitialized && _videoController != null
@@ -1605,7 +1605,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => Dialog(
-          backgroundColor: const Color(0xFF161d2c),
+          backgroundColor: const Color(0xFFFFFFFF),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Container(
@@ -1659,7 +1659,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                         child: Container(
                           height: 40,
                           decoration: BoxDecoration(
-                              color: const Color(0xFF101622),
+                              color: const Color(0xFFFFFFFF),
                               borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.all(4),
                           child: Row(
@@ -1847,7 +1847,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF111722).withOpacity(0.6),
+                    color: const Color(0xFFE8F0FE).withOpacity(0.9),
                     border: Border(
                         top: BorderSide(color: Colors.white.withOpacity(0.1))),
                     borderRadius: const BorderRadius.only(
