@@ -1,6 +1,6 @@
 # MacWhisper
 
-A powerful macOS subtitle editor built with Flutter that enables automatic transcription of video files using OpenAI's Whisper model.
+A powerful macOS subtitle editor built with Flutter that enables automatic transcription of video files(Local files or URLs/Links) using OpenAI's Whisper model.
 
 ![macOS](https://img.shields.io/badge/platform-macOS-blue)
 ![Flutter](https://img.shields.io/badge/Flutter-3.0+-02569B?logo=flutter)
