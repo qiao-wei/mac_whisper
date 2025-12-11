@@ -27,7 +27,7 @@ class _VideoPreviewState extends State<VideoPreview> {
   Timer? _seekTimer;
   static const _seekStep = Duration(seconds: 5);
   static const _continuousSeekInterval = Duration(milliseconds: 100);
-  static const _continuousSeekStep = Duration(milliseconds: 500);
+  static const _continuousSeekStep = Duration(milliseconds: 1000);
 
   @override
   void dispose() {
