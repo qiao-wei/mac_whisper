@@ -1338,65 +1338,69 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     // Get or create GlobalKey for this row
     _rowKeys.putIfAbsent(sub.id, () => GlobalKey());
 
-    return MouseRegion(
-      key: _rowKeys[sub.id],
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hoveredRowId = sub.id),
-      onExit: (_) => setState(() => _hoveredRowId = null),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: sub.selected
-              ? const Color(0xFF111C30)
-              : (_hoveredRowId == sub.id ? const Color(0xFF0D1420) : null),
-          border: Border(
-              left: BorderSide(
-                  color: sub.selected ? Colors.blue : Colors.transparent,
-                  width: 2),
-              bottom: BorderSide(color: Colors.grey.shade800.withOpacity(0.5))),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-                width: 40,
-                child: Checkbox(
-                    value: sub.selected,
-                    onChanged: (_) => _handleCheckboxClick(index))),
-            SizedBox(
-                width: 120,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: () => _handleRowClick(sub.id),
+      child: MouseRegion(
+        key: _rowKeys[sub.id],
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hoveredRowId = sub.id),
+        onExit: (_) => setState(() => _hoveredRowId = null),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            color: sub.selected
+                ? const Color(0xFF111C30)
+                : (_hoveredRowId == sub.id ? const Color(0xFF0D1420) : null),
+            border: Border(
+                left: BorderSide(
+                    color: sub.selected ? Colors.blue : Colors.transparent,
+                    width: 2),
+                bottom:
+                    BorderSide(color: Colors.grey.shade800.withOpacity(0.5))),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                  width: 40,
+                  child: Checkbox(
+                      value: sub.selected,
+                      onChanged: (_) => _handleCheckboxClick(index))),
+              SizedBox(
+                  width: 120,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildEditableCell(sub, 'startTime', true),
+                      const SizedBox(height: 4),
+                      _buildEditableCell(sub, 'endTime', true),
+                    ],
+                  )),
+              Expanded(child: _buildEditableCell(sub, 'text', false)),
+              // Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
+              SizedBox(
+                width: 96,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    _buildEditableCell(sub, 'startTime', true),
-                    const SizedBox(height: 4),
-                    _buildEditableCell(sub, 'endTime', true),
+                    IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 16),
+                        color: Colors.grey.shade600,
+                        onPressed: () => _handleDelete(sub.id),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints()),
+                    const SizedBox(width: 8),
+                    // IconButton(
+                    //     icon: const Icon(Icons.text_fields, size: 16),
+                    //     color: Colors.grey.shade600,
+                    //     onPressed: () {},
+                    //     padding: EdgeInsets.zero,
+                    //     constraints: const BoxConstraints()),
                   ],
-                )),
-            Expanded(child: _buildEditableCell(sub, 'text', false)),
-            // Expanded(child: _buildEditableCell(sub, 'translatedText', false)),
-            SizedBox(
-              width: 96,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 16),
-                      color: Colors.grey.shade600,
-                      onPressed: () => _handleDelete(sub.id),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints()),
-                  const SizedBox(width: 8),
-                  // IconButton(
-                  //     icon: const Icon(Icons.text_fields, size: 16),
-                  //     color: Colors.grey.shade600,
-                  //     onPressed: () {},
-                  //     padding: EdgeInsets.zero,
-                  //     constraints: const BoxConstraints()),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
