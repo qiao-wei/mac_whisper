@@ -142,21 +142,36 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         curve: Curves.easeOut,
       );
     } else {
-      // Fallback: calculate position manually if row hasn't been built yet
+      // Fallback: use percentage-based scroll since row heights are variable
       final index = _subtitles.indexWhere((s) => s.id == subtitleId);
-      if (index != -1 && _scrollController.hasClients) {
-        // Approximate row height (padding + content)
-        const rowHeight = 72.0;
-        final targetOffset = index * rowHeight;
-        final viewportHeight = _scrollController.position.viewportDimension;
-        // Center the row in viewport
-        final centeredOffset =
-            targetOffset - (viewportHeight / 2) + (rowHeight / 2);
+      if (index != -1 &&
+          _scrollController.hasClients &&
+          _subtitles.isNotEmpty) {
+        // Calculate scroll position as percentage of total content
+        final percentage = index / _subtitles.length;
+        final maxExtent = _scrollController.position.maxScrollExtent;
+        final targetOffset = maxExtent * percentage;
+
         _scrollController.animateTo(
-          centeredOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+          targetOffset.clamp(0.0, maxExtent),
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
+
+        // After scroll animation completes, try precise scroll if key is now available
+        Future.delayed(const Duration(milliseconds: 250), () {
+          if (mounted) {
+            final updatedKey = _rowKeys[subtitleId];
+            if (updatedKey?.currentContext != null) {
+              Scrollable.ensureVisible(
+                updatedKey!.currentContext!,
+                alignment: 0.5,
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeOut,
+              );
+            }
+          }
+        });
       }
     }
   }
@@ -736,15 +751,10 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
             s.selected = s.id == sub.id;
           }
         });
-        // Scroll to this row (approximate row height of 48)
-        if (_scrollController.hasClients) {
-          final targetOffset = i * 48.0;
-          _scrollController.animateTo(
-            targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-          );
-        }
+        // Scroll to this row after the widget has rebuilt
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToRow(sub.id);
+        });
         break;
       }
     }
