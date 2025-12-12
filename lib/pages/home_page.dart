@@ -203,11 +203,11 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                               color: theme.textSecondary, fontSize: 18)),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'A powerful macOS app for effortless subtitle extraction, editing, and translation from any audio or video source.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: Color(0xFFCBD5E1),
+                            color: theme.textSecondary,
                             fontSize: 16,
                             height: 1.5),
                       ),
