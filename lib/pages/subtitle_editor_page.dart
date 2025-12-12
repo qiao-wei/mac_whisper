@@ -52,6 +52,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   bool _isEditingTitle = false;
   late String _title;
   final _titleController = TextEditingController();
+  final _titleFocusNode = FocusNode();
   bool _isGenerating = false;
   String _progressText = '';
   String _selectedModel = 'base';
@@ -1059,7 +1060,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   width: 600,
                   child: TextField(
                     controller: _titleController,
-                    autofocus: true,
+                    focusNode: _titleFocusNode,
                     style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 18,
@@ -1078,16 +1079,42 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                     }),
                   ),
                 )
-              : GestureDetector(
-                  onDoubleTap: () => setState(() {
-                    _titleController.text = _title;
-                    _isEditingTitle = true;
-                  }),
-                  child: Text(_title,
-                      style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                          color: theme.textPrimary)),
+              : Row(
+                  children: [
+                    GestureDetector(
+                      onDoubleTap: () {
+                        setState(() {
+                          _titleController.text = _title;
+                          _isEditingTitle = true;
+                        });
+                        Future.delayed(Duration(milliseconds: 50), () {
+                          _titleFocusNode.requestFocus();
+                        });
+                      },
+                      child: Text(_title,
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                              color: theme.textPrimary)),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: Icon(Icons.edit, size: 16),
+                      color: theme.textSecondary,
+                      onPressed: () {
+                        setState(() {
+                          _titleController.text = _title;
+                          _isEditingTitle = true;
+                        });
+                        Future.delayed(Duration(milliseconds: 50), () {
+                          _titleFocusNode.requestFocus();
+                        });
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      tooltip: 'Edit title',
+                    ),
+                  ],
                 ),
           const Spacer(),
           // ElevatedButton(
