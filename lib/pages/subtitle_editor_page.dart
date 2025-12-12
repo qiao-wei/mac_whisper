@@ -1169,13 +1169,21 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [
-                Colors.purple.shade900.withOpacity(0.6),
-                Colors.blue.shade900.withOpacity(0.6)
-              ]),
+              gradient: LinearGradient(
+                  colors: theme.isDark
+                      ? [
+                          Colors.purple.shade900.withOpacity(0.6),
+                          Colors.blue.shade900.withOpacity(0.6)
+                        ]
+                      : [
+                          Colors.indigo.shade50,
+                          Colors.purple.shade50,
+                        ]),
               borderRadius: BorderRadius.circular(6),
-              border:
-                  Border.all(color: Colors.purple.shade700.withOpacity(0.5)),
+              border: Border.all(
+                  color: theme.isDark
+                      ? Colors.purple.shade700.withOpacity(0.5)
+                      : Colors.indigo.shade200),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1184,7 +1192,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                     size: 14,
                     color: theme.isDark
                         ? Colors.purple.shade300
-                        : Colors.purple.shade700),
+                        : Colors.indigo.shade600),
                 const SizedBox(width: 6),
                 DropdownButton<String>(
                   value: _selectedModel,
@@ -1195,7 +1203,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                       size: 16,
                       color: theme.isDark
                           ? Colors.purple.shade300
-                          : Colors.purple.shade700),
+                          : Colors.indigo.shade600),
                   items: _models
                       .map((m) => DropdownMenuItem(
                           value: m,
@@ -1203,7 +1211,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                               style: TextStyle(
                                   color: theme.isDark
                                       ? Colors.purple.shade100
-                                      : Colors.purple.shade700,
+                                      : Colors.indigo.shade700,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 12,
                                   letterSpacing: 0.5))))
@@ -1223,15 +1231,21 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
               ? ElevatedButton(
                   onPressed: _stopProcess,
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor:
+                          theme.isDark ? Colors.red : Colors.blue.shade100,
+                      foregroundColor:
+                          theme.isDark ? Colors.white : Colors.blue.shade700,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6)),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    const SizedBox(
+                    SizedBox(
                         width: 12,
                         height: 12,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white)),
+                            strokeWidth: 2,
+                            color: theme.isDark
+                                ? Colors.white
+                                : Colors.blue.shade700)),
                     const SizedBox(width: 6),
                     Text(_progressText, style: const TextStyle(fontSize: 11)),
                     const SizedBox(width: 6),
@@ -1241,7 +1255,10 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                   onPressed: _generateSubtitles,
                   style: ElevatedButton.styleFrom(
                       minimumSize: const Size(120, 46),
-                      backgroundColor: Colors.green,
+                      backgroundColor:
+                          theme.isDark ? Colors.green : Colors.blue.shade100,
+                      foregroundColor:
+                          theme.isDark ? Colors.white : Colors.blue.shade700,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6)),
                   child: const Text('Transcribe',
