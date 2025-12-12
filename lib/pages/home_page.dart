@@ -192,19 +192,6 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(48),
                   child: Column(
                     children: [
-                      Container(
-                        height: 96,
-                        width: 96,
-                        decoration: BoxDecoration(
-                          color: theme.featureBorder.withOpacity(0.5),
-                          border: Border.all(
-                              color: theme.featureBorder.withOpacity(0.8)),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Icon(Icons.subtitles,
-                            size: 48, color: Color(0xFF135BEC)),
-                      ),
-                      const SizedBox(height: 24),
                       Text('MacWhisper',
                           style: TextStyle(
                               fontSize: 48,
