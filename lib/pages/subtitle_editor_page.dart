@@ -1102,11 +1102,11 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           OutlinedButton(
               onPressed: _showExportDialog,
               style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.grey.shade600),
+                  side: BorderSide(color: theme.textSecondary),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
               child:
-                  const Text('Export', style: TextStyle(color: Colors.grey))),
+                  Text('Export', style: TextStyle(color: theme.textSecondary))),
         ],
       ),
     );
