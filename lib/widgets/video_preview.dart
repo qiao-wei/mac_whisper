@@ -225,9 +225,12 @@ class _VideoPreviewState extends State<VideoPreview> {
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 8),
-              Text(
-                _formatDuration(value.position),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+              SizedBox(
+                width: 40,
+                child: Text(
+                  _formatDuration(value.position),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -290,9 +293,12 @@ class _VideoPreviewState extends State<VideoPreview> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                _formatDuration(value.duration),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+              SizedBox(
+                width: 40,
+                child: Text(
+                  _formatDuration(value.duration),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
               ),
               const SizedBox(width: 8),
               IconButton(
@@ -578,9 +584,12 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
                 },
               ),
               const SizedBox(width: 16),
-              Text(
-                _formatDuration(value.position),
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+              SizedBox(
+                width: 50,
+                child: Text(
+                  _formatDuration(value.position),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -643,9 +652,12 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
                 ),
               ),
               const SizedBox(width: 16),
-              Text(
-                _formatDuration(value.duration),
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+              SizedBox(
+                width: 50,
+                child: Text(
+                  _formatDuration(value.duration),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
               ),
               const SizedBox(width: 16),
               IconButton(
