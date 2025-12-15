@@ -24,15 +24,11 @@ class VideoPreview extends StatefulWidget {
 
 class _VideoPreviewState extends State<VideoPreview> {
   final FocusNode _focusNode = FocusNode();
-  Timer? _seekTimer;
   static const _seekStep = Duration(seconds: 5);
-  static const _continuousSeekInterval = Duration(milliseconds: 100);
-  static const _continuousSeekStep = Duration(milliseconds: 1000);
 
   @override
   void dispose() {
     _focusNode.dispose();
-    _seekTimer?.cancel();
     super.dispose();
   }
 
@@ -47,25 +43,9 @@ class _VideoPreviewState extends State<VideoPreview> {
           widget.controller.play();
         }
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        if (_seekTimer == null) {
-          _seekBackward();
-          _seekTimer = Timer.periodic(_continuousSeekInterval, (_) {
-            _seekBackwardContinuous();
-          });
-        }
+        _seekBackward();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        if (_seekTimer == null) {
-          _seekForward();
-          _seekTimer = Timer.periodic(_continuousSeekInterval, (_) {
-            _seekForwardContinuous();
-          });
-        }
-      }
-    } else if (event is KeyUpEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-          event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        _seekTimer?.cancel();
-        _seekTimer = null;
+        _seekForward();
       }
     }
   }
@@ -82,23 +62,6 @@ class _VideoPreviewState extends State<VideoPreview> {
     final currentPos = widget.controller.value.position;
     final duration = widget.controller.value.duration;
     final newPos = currentPos + _seekStep;
-    final clampedPos = newPos > duration ? duration : newPos;
-    widget.controller.seekTo(clampedPos);
-    widget.onSeek?.call(clampedPos);
-  }
-
-  void _seekBackwardContinuous() {
-    final currentPos = widget.controller.value.position;
-    final newPos = currentPos - _continuousSeekStep;
-    final clampedPos = newPos < Duration.zero ? Duration.zero : newPos;
-    widget.controller.seekTo(clampedPos);
-    widget.onSeek?.call(clampedPos);
-  }
-
-  void _seekForwardContinuous() {
-    final currentPos = widget.controller.value.position;
-    final duration = widget.controller.value.duration;
-    final newPos = currentPos + _continuousSeekStep;
     final clampedPos = newPos > duration ? duration : newPos;
     widget.controller.seekTo(clampedPos);
     widget.onSeek?.call(clampedPos);
@@ -136,10 +99,13 @@ class _VideoPreviewState extends State<VideoPreview> {
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardListener(
+    return Focus(
       focusNode: _focusNode,
       autofocus: true,
-      onKeyEvent: _handleKeyDown,
+      onKeyEvent: (node, event) {
+        _handleKeyDown(event);
+        return KeyEventResult.handled;
+      },
       child: GestureDetector(
         onTap: () => _focusNode.requestFocus(),
         onDoubleTap: widget.initialized ? _enterFullscreen : null,
@@ -340,12 +306,9 @@ class _FullscreenVideoPlayer extends StatefulWidget {
 
 class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
   final FocusNode _focusNode = FocusNode();
-  Timer? _seekTimer;
   bool _showControls = true;
   Timer? _hideControlsTimer;
   static const _seekStep = Duration(seconds: 5);
-  static const _continuousSeekInterval = Duration(milliseconds: 100);
-  static const _continuousSeekStep = Duration(milliseconds: 500);
 
   @override
   void initState() {
@@ -356,7 +319,6 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
   @override
   void dispose() {
     _focusNode.dispose();
-    _seekTimer?.cancel();
     _hideControlsTimer?.cancel();
     super.dispose();
   }
@@ -387,27 +349,11 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
         }
         _showControlsTemporarily();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        if (_seekTimer == null) {
-          _seekBackward();
-          _seekTimer = Timer.periodic(_continuousSeekInterval, (_) {
-            _seekBackwardContinuous();
-          });
-        }
+        _seekBackward();
         _showControlsTemporarily();
       } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        if (_seekTimer == null) {
-          _seekForward();
-          _seekTimer = Timer.periodic(_continuousSeekInterval, (_) {
-            _seekForwardContinuous();
-          });
-        }
+        _seekForward();
         _showControlsTemporarily();
-      }
-    } else if (event is KeyUpEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
-          event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        _seekTimer?.cancel();
-        _seekTimer = null;
       }
     }
   }
@@ -424,23 +370,6 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
     final currentPos = widget.controller.value.position;
     final duration = widget.controller.value.duration;
     final newPos = currentPos + _seekStep;
-    final clampedPos = newPos > duration ? duration : newPos;
-    widget.controller.seekTo(clampedPos);
-    widget.onSeek?.call(clampedPos);
-  }
-
-  void _seekBackwardContinuous() {
-    final currentPos = widget.controller.value.position;
-    final newPos = currentPos - _continuousSeekStep;
-    final clampedPos = newPos < Duration.zero ? Duration.zero : newPos;
-    widget.controller.seekTo(clampedPos);
-    widget.onSeek?.call(clampedPos);
-  }
-
-  void _seekForwardContinuous() {
-    final currentPos = widget.controller.value.position;
-    final duration = widget.controller.value.duration;
-    final newPos = currentPos + _continuousSeekStep;
     final clampedPos = newPos > duration ? duration : newPos;
     widget.controller.seekTo(clampedPos);
     widget.onSeek?.call(clampedPos);
@@ -466,10 +395,13 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: KeyboardListener(
+      body: Focus(
         focusNode: _focusNode,
         autofocus: true,
-        onKeyEvent: _handleKeyDown,
+        onKeyEvent: (node, event) {
+          _handleKeyDown(event);
+          return KeyEventResult.handled;
+        },
         child: MouseRegion(
           onHover: (_) => _showControlsTemporarily(),
           child: GestureDetector(
