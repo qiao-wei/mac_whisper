@@ -712,6 +712,15 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         int.parse(secParts[1]);
   }
 
+  String? _validateAndNormalizeTime(String timeStr) {
+    try {
+      final ms = _parseTimeToMs(timeStr);
+      return _formatMsToTime(ms.clamp(0, 99999999));
+    } catch (_) {
+      return null;
+    }
+  }
+
   String _formatMsToTime(int totalMs) {
     final h = (totalMs ~/ 3600000).toString().padLeft(2, '0');
     final m = ((totalMs % 3600000) ~/ 60000).toString().padLeft(2, '0');
@@ -860,9 +869,28 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _saveSubtitles();
   }
 
-  void _saveCellValue(int id, String field, String newValue) {
+  void _saveCellValue(int id, String field, String newValue,
+      {bool adjustAdjacent = true}) {
     final idx = _subtitles.indexWhere((s) => s.id == id);
     if (idx == -1) return;
+
+    // Validate and normalize time values
+    if (field == 'startTime' || field == 'endTime') {
+      final normalized = _validateAndNormalizeTime(newValue);
+      if (normalized == null) {
+        // Invalid format, revert to old value
+        final key = '${id}_$field';
+        final oldValue = field == 'startTime'
+            ? _subtitles[idx].startTime
+            : _subtitles[idx].endTime;
+        _cellControllers[key]?.text = oldValue;
+        return;
+      }
+      newValue = normalized;
+      final key = '${id}_$field';
+      _cellControllers[key]?.text = newValue;
+    }
+
     final oldValue = switch (field) {
       'startTime' => _subtitles[idx].startTime,
       'endTime' => _subtitles[idx].endTime,
@@ -876,9 +904,19 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         switch (field) {
           case 'startTime':
             _subtitles[idx].startTime = newValue;
+            if (adjustAdjacent && idx > 0) {
+              _subtitles[idx - 1].endTime = newValue;
+              final prevKey = '${_subtitles[idx - 1].id}_endTime';
+              _cellControllers[prevKey]?.text = newValue;
+            }
             break;
           case 'endTime':
             _subtitles[idx].endTime = newValue;
+            if (adjustAdjacent && idx < _subtitles.length - 1) {
+              _subtitles[idx + 1].startTime = newValue;
+              final nextKey = '${_subtitles[idx + 1].id}_startTime';
+              _cellControllers[nextKey]?.text = newValue;
+            }
             break;
           case 'text':
             _subtitles[idx].text = newValue;
@@ -889,6 +927,12 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
         }
       });
       _saveSubtitles();
+
+      // Seek video to new start time
+      if (field == 'startTime' && _videoController != null && _videoInitialized) {
+        final newMs = _parseTimeToMs(newValue);
+        _videoController!.seekTo(Duration(milliseconds: newMs + 10));
+      }
     }
   }
 
@@ -1523,6 +1567,24 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           _saveCellValue(sub.id, field, controller.text);
         }
       },
+      onKeyEvent: isTime
+          ? (node, event) {
+              if (event is KeyDownEvent) {
+                if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
+                    event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                  final currentMs = _parseTimeToMs(controller.text);
+                  final delta =
+                      event.logicalKey == LogicalKeyboardKey.arrowUp ? -100 : 100;
+                  final newMs = (currentMs + delta).clamp(0, 99999999);
+                  final newTime = _formatMsToTime(newMs);
+                  controller.text = newTime;
+                  _saveCellValue(sub.id, field, newTime);
+                  return KeyEventResult.handled;
+                }
+              }
+              return KeyEventResult.ignored;
+            }
+          : null,
       child: TextField(
         controller: controller,
         focusNode: focusNode,
