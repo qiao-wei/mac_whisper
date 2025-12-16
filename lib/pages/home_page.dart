@@ -12,6 +12,7 @@ import '../services/binary_service.dart';
 import 'subtitle_editor_page.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
+import '../widgets/srt_font_settings_tab.dart';
 
 class _DashedBorderPainter extends CustomPainter {
   final Color color;
@@ -180,152 +181,8 @@ class _HomePageState extends State<HomePage> {
     final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: theme.settingsDialog,
-        child: Container(
-          width: 800,
-          constraints: const BoxConstraints(maxHeight: 700),
-          child: Stack(
-            children: [
-              SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(48),
-                  child: Column(
-                    children: [
-                      Text('MacWhisper',
-                          style: TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -2,
-                              color: theme.textPrimary)),
-                      const SizedBox(height: 8),
-                      Text('Version $_appVersion',
-                          style: TextStyle(
-                              color: theme.textSecondary, fontSize: 18)),
-                      const SizedBox(height: 16),
-                      Text(
-                        'A powerful macOS app for effortless subtitle extraction, editing, and translation from any audio or video source.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: theme.textSecondary,
-                            fontSize: 16,
-                            height: 1.5),
-                      ),
-                      const SizedBox(height: 48),
-                      Text('Core Features',
-                          style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: theme.textPrimary)),
-                      const SizedBox(height: 24),
-                      GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 3,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 1.2,
-                        children: [
-                          _buildFeatureCard(
-                              context,
-                              Icons.movie,
-                              'Smart Extraction',
-                              'Automatically generate accurate subtitles from audio and video files.',
-                              true),
-                          _buildFeatureCard(
-                              context,
-                              Icons.edit_square,
-                              'Intuitive Editing',
-                              'Easily proofread, modify timings, and edit text content.',
-                              true),
-                          _buildFeatureCard(
-                              context,
-                              Icons.desktop_mac,
-                              'Native macOS Feel',
-                              'A clean and fluid interface that perfectly integrates with macOS.',
-                              true),
-                          _buildFeatureCard(
-                              context,
-                              Icons.merge_type,
-                              'Video Merging',
-                              'Seamlessly merge your finished subtitles back into the original video.',
-                              false),
-                          _buildFeatureCard(
-                              context,
-                              Icons.link,
-                              'URL Support',
-                              'Extract content directly from web links to simplify your workflow.',
-                              true),
-                          _buildFeatureCard(
-                              context,
-                              Icons.translate,
-                              'One-Click Translation',
-                              'Instantly translate your subtitles into multiple languages.',
-                              false),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
-                      Container(
-                        padding: const EdgeInsets.only(top: 24),
-                        decoration: BoxDecoration(
-                          border: Border(top: BorderSide(color: theme.border)),
-                        ),
-                        child: const Text(
-                            '© 2025 The MacWhisper Team. All Rights Reserved.',
-                            style: TextStyle(color: Colors.grey, fontSize: 12)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 16,
-                right: 16,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeatureCard(BuildContext context, IconData icon, String title,
-      String description, bool enabled) {
-    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.featureCard.withOpacity(0.7),
-        border: Border.all(color: theme.featureBorder),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon,
-              size: 32,
-              color: enabled ? const Color(0xFF135BEC) : theme.textMuted),
-          const SizedBox(height: 12),
-          Text(title,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: enabled ? theme.textPrimary : theme.textMuted),
-              textAlign: TextAlign.center),
-          const SizedBox(height: 8),
-          Text(description,
-              style: TextStyle(
-                  fontSize: 11,
-                  color: enabled ? theme.textSecondary : theme.textMuted),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis),
-        ],
-      ),
+      builder: (context) =>
+          _SettingsDialog(theme: theme, appVersion: _appVersion),
     );
   }
 
@@ -1187,6 +1044,238 @@ class _ProjectItemWidgetState extends State<_ProjectItemWidget> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Tabbed Settings Dialog Widget
+class _SettingsDialog extends StatefulWidget {
+  final AppTheme theme;
+  final String appVersion;
+
+  const _SettingsDialog({required this.theme, required this.appVersion});
+
+  @override
+  State<_SettingsDialog> createState() => _SettingsDialogState();
+}
+
+class _SettingsDialogState extends State<_SettingsDialog> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    return Dialog(
+      backgroundColor: theme.settingsDialog,
+      child: Container(
+        width: 850,
+        constraints: const BoxConstraints(maxHeight: 700),
+        child: Row(
+          children: [
+            // Left sidebar with tabs
+            Container(
+              width: 180,
+              decoration: BoxDecoration(
+                border: Border(right: BorderSide(color: theme.border)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  _buildSidebarItem(0, Icons.info_outline, 'About', theme),
+                  _buildSidebarItem(1, Icons.text_fields, 'SRT Font', theme),
+                  const Spacer(),
+                ],
+              ),
+            ),
+            // Content area
+            Expanded(
+              child: Stack(
+                children: [
+                  IndexedStack(
+                    index: _selectedIndex,
+                    children: [
+                      _buildAboutTab(theme),
+                      const SrtFontSettingsTab(),
+                    ],
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSidebarItem(
+      int index, IconData icon, String label, AppTheme theme) {
+    final isSelected = _selectedIndex == index;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: InkWell(
+        onTap: () => setState(() => _selectedIndex = index),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF2563EB) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? Colors.white : theme.textSecondary,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? Colors.white : theme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAboutTab(AppTheme theme) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(48),
+        child: Column(
+          children: [
+            Text('MacWhisper',
+                style: TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -2,
+                    color: theme.textPrimary)),
+            const SizedBox(height: 8),
+            Text('Version ${widget.appVersion}',
+                style: TextStyle(color: theme.textSecondary, fontSize: 18)),
+            const SizedBox(height: 16),
+            Text(
+              'A powerful macOS app for effortless subtitle extraction, editing, and translation from any audio or video source.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: theme.textSecondary, fontSize: 16, height: 1.5),
+            ),
+            const SizedBox(height: 48),
+            Text('Core Features',
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: theme.textPrimary)),
+            const SizedBox(height: 24),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 3,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.2,
+              children: [
+                _buildFeatureCard(
+                    Icons.movie,
+                    'Smart Extraction',
+                    'Automatically generate accurate subtitles from audio and video files.',
+                    true,
+                    theme),
+                _buildFeatureCard(
+                    Icons.edit_square,
+                    'Intuitive Editing',
+                    'Easily proofread, modify timings, and edit text content.',
+                    true,
+                    theme),
+                _buildFeatureCard(
+                    Icons.desktop_mac,
+                    'Native macOS Feel',
+                    'A clean and fluid interface that perfectly integrates with macOS.',
+                    true,
+                    theme),
+                _buildFeatureCard(
+                    Icons.merge_type,
+                    'Video Merging',
+                    'Seamlessly merge your finished subtitles back into the original video.',
+                    false,
+                    theme),
+                _buildFeatureCard(
+                    Icons.link,
+                    'URL Support',
+                    'Extract content directly from web links to simplify your workflow.',
+                    true,
+                    theme),
+                _buildFeatureCard(
+                    Icons.translate,
+                    'One-Click Translation',
+                    'Instantly translate your subtitles into multiple languages.',
+                    false,
+                    theme),
+              ],
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.only(top: 24),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: theme.border)),
+              ),
+              child: const Text(
+                  '© 2025 The MacWhisper Team. All Rights Reserved.',
+                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard(IconData icon, String title, String description,
+      bool enabled, AppTheme theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.featureCard.withOpacity(0.7),
+        border: Border.all(color: theme.featureBorder),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon,
+              size: 32,
+              color: enabled ? const Color(0xFF135BEC) : theme.textMuted),
+          const SizedBox(height: 12),
+          Text(title,
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: enabled ? theme.textPrimary : theme.textMuted),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 8),
+          Text(description,
+              style: TextStyle(
+                  fontSize: 11,
+                  color: enabled ? theme.textSecondary : theme.textMuted),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis),
+        ],
       ),
     );
   }
