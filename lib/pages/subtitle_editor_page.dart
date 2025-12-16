@@ -10,6 +10,7 @@ import '../widgets/video_preview.dart';
 import '../models/subtitle.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
+import '../widgets/project_font_settings_dialog.dart';
 
 class SubtitleItem {
   int? dbId;
@@ -929,7 +930,9 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       _saveSubtitles();
 
       // Seek video to new start time
-      if (field == 'startTime' && _videoController != null && _videoInitialized) {
+      if (field == 'startTime' &&
+          _videoController != null &&
+          _videoInitialized) {
         final newMs = _parseTimeToMs(newValue);
         _videoController!.seekTo(Duration(milliseconds: newMs + 10));
       }
@@ -1236,6 +1239,21 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
               Icons.merge, 'Merge', _selectedCount >= 2, _handleMerge),
           _buildMergeSplitButton(
               Icons.content_cut, 'Split', _selectedCount == 1, _handleSplit),
+          const SizedBox(width: 8),
+          // Font settings button
+          IconButton(
+            icon: const Icon(Icons.text_fields, size: 18),
+            color: theme.textSecondary,
+            tooltip: 'Font Settings',
+            onPressed: widget.projectId != null
+                ? () => showDialog(
+                      context: context,
+                      builder: (_) => ProjectFontSettingsDialog(
+                        projectId: widget.projectId!,
+                      ),
+                    )
+                : null,
+          ),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -1573,8 +1591,9 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                 if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
                     event.logicalKey == LogicalKeyboardKey.arrowDown) {
                   final currentMs = _parseTimeToMs(controller.text);
-                  final delta =
-                      event.logicalKey == LogicalKeyboardKey.arrowUp ? -100 : 100;
+                  final delta = event.logicalKey == LogicalKeyboardKey.arrowUp
+                      ? -100
+                      : 100;
                   final newMs = (currentMs + delta).clamp(0, 99999999);
                   final newTime = _formatMsToTime(newMs);
                   controller.text = newTime;

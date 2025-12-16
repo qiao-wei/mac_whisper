@@ -13,7 +13,6 @@ class SrtFontSettingsTab extends StatefulWidget {
 class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
   SrtFontConfig _config = SrtFontConfig();
   bool _isLoading = true;
-  bool _hasChanges = false;
 
   @override
   void initState() {
@@ -29,17 +28,11 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
     });
   }
 
-  Future<void> _saveConfig() async {
-    await _config.save();
-    setState(() => _hasChanges = false);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Font settings saved'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+  /// Update config and save immediately
+  void _updateConfig(SrtFontConfig newConfig) {
+    setState(() => _config = newConfig);
+    // Save in background
+    newConfig.save();
   }
 
   @override
@@ -57,7 +50,7 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'SRT Font Settings',
+              'Global SRT Font Settings',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -66,7 +59,7 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Configure the font used for subtitle display and export.',
+              'Default font settings for all projects. Changes are saved automatically.',
               style: TextStyle(color: theme.textSecondary, fontSize: 14),
             ),
             const SizedBox(height: 32),
@@ -100,10 +93,7 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
                   }).toList(),
                   onChanged: (value) {
                     if (value != null) {
-                      setState(() {
-                        _config = _config.copyWith(fontFamily: value);
-                        _hasChanges = true;
-                      });
+                      _updateConfig(_config.copyWith(fontFamily: value));
                     }
                   },
                 ),
@@ -128,10 +118,7 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
                 max: 48,
                 divisions: 34,
                 onChanged: (value) {
-                  setState(() {
-                    _config = _config.copyWith(fontSize: value);
-                    _hasChanges = true;
-                  });
+                  _updateConfig(_config.copyWith(fontSize: value));
                 },
               ),
             ),
@@ -177,30 +164,6 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
-
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _hasChanges ? _saveConfig : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: theme.border,
-                  disabledForegroundColor: theme.textMuted,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  _hasChanges ? 'Save Settings' : 'Settings Saved',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -223,10 +186,7 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
     return Expanded(
       child: GestureDetector(
         onTap: () {
-          setState(() {
-            _config = _config.copyWith(isBold: isBold);
-            _hasChanges = true;
-          });
+          _updateConfig(_config.copyWith(isBold: isBold));
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),

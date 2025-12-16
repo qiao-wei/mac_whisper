@@ -55,9 +55,44 @@ class SrtFontConfig {
     return SrtFontConfig();
   }
 
+  /// Load project-specific config, falls back to global if not set
+  static Future<SrtFontConfig> loadForProject(String? projectId) async {
+    if (projectId == null) return load();
+
+    final db = DatabaseService();
+    final configStr = await db.getConfig('srt_font_config_$projectId');
+    if (configStr != null) {
+      try {
+        return SrtFontConfig.fromJson(jsonDecode(configStr));
+      } catch (_) {}
+    }
+    // Fall back to global config
+    return load();
+  }
+
+  /// Check if project has custom config
+  static Future<bool> hasProjectConfig(String projectId) async {
+    final db = DatabaseService();
+    final configStr = await db.getConfig('srt_font_config_$projectId');
+    return configStr != null;
+  }
+
   Future<void> save() async {
     final db = DatabaseService();
     await db.setConfig('srt_font_config', jsonEncode(toJson()));
+  }
+
+  /// Save config for specific project
+  Future<void> saveForProject(String projectId) async {
+    final db = DatabaseService();
+    await db.setConfig('srt_font_config_$projectId', jsonEncode(toJson()));
+  }
+
+  /// Clear project-specific config (revert to global)
+  static Future<void> clearProjectConfig(String projectId) async {
+    final db = DatabaseService();
+    // Delete by setting empty - or we could add a delete method to DatabaseService
+    await db.setConfig('srt_font_config_$projectId', '');
   }
 
   SrtFontConfig copyWith({
