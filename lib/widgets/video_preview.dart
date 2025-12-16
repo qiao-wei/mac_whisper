@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import '../models/subtitle.dart';
+import '../models/srt_font_config.dart';
 
 class VideoPreview extends StatefulWidget {
   final VideoPlayerController controller;
   final bool initialized;
   final List<Subtitle> subtitles;
+  final SrtFontConfig? fontConfig;
   final void Function(Duration position)? onSeek;
 
   const VideoPreview({
@@ -15,6 +17,7 @@ class VideoPreview extends StatefulWidget {
     required this.controller,
     required this.initialized,
     required this.subtitles,
+    this.fontConfig,
     this.onSeek,
   });
 
@@ -87,6 +90,7 @@ class _VideoPreviewState extends State<VideoPreview> {
           return _FullscreenVideoPlayer(
             controller: widget.controller,
             subtitles: widget.subtitles,
+            fontConfig: widget.fontConfig,
             onSeek: widget.onSeek,
           );
         },
@@ -140,9 +144,16 @@ class _VideoPreviewState extends State<VideoPreview> {
                       child: Text(
                         text,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
+                          fontFamily:
+                              widget.fontConfig?.fontFamily == 'System Default'
+                                  ? null
+                                  : widget.fontConfig?.fontFamily,
                           color: Colors.white,
-                          fontSize: 18,
+                          fontSize: widget.fontConfig?.fontSize ?? 18,
+                          fontWeight: (widget.fontConfig?.isBold ?? false)
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                     );
@@ -292,11 +303,13 @@ class _VideoPreviewState extends State<VideoPreview> {
 class _FullscreenVideoPlayer extends StatefulWidget {
   final VideoPlayerController controller;
   final List<Subtitle> subtitles;
+  final SrtFontConfig? fontConfig;
   final void Function(Duration position)? onSeek;
 
   const _FullscreenVideoPlayer({
     required this.controller,
     required this.subtitles,
+    this.fontConfig,
     this.onSeek,
   });
 
@@ -435,10 +448,16 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
                         child: Text(
                           text,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
+                            fontFamily: widget.fontConfig?.fontFamily ==
+                                    'System Default'
+                                ? null
+                                : widget.fontConfig?.fontFamily,
                             color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w500,
+                            fontSize: (widget.fontConfig?.fontSize ?? 18) * 1.5,
+                            fontWeight: (widget.fontConfig?.isBold ?? false)
+                                ? FontWeight.bold
+                                : FontWeight.w500,
                           ),
                         ),
                       );

@@ -11,6 +11,7 @@ import '../models/subtitle.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../widgets/project_font_settings_dialog.dart';
+import '../models/srt_font_config.dart';
 
 class SubtitleItem {
   int? dbId;
@@ -73,6 +74,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   bool _isDraggingDivider = false;
   bool _isHoveringDivider = false;
   final Map<int, GlobalKey> _rowKeys = {};
+  SrtFontConfig? _fontConfig;
 
   List<SubtitleItem> _subtitles = [];
 
@@ -84,6 +86,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     _loadSubtitles();
     _loadSelectedModel();
     _loadPreviewPanelRatio();
+    _loadFontConfig();
     _initVideo();
   }
 
@@ -196,6 +199,13 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       if (parsed != null && parsed >= 0.2 && parsed <= 0.6) {
         setState(() => _previewPanelRatio = parsed);
       }
+    }
+  }
+
+  Future<void> _loadFontConfig() async {
+    final config = await SrtFontConfig.loadForProject(widget.projectId);
+    if (mounted) {
+      setState(() => _fontConfig = config);
     }
   }
 
@@ -1250,6 +1260,9 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                       context: context,
                       builder: (_) => ProjectFontSettingsDialog(
                         projectId: widget.projectId!,
+                        onConfigChanged: (config) {
+                          setState(() => _fontConfig = config);
+                        },
                       ),
                     )
                 : null,
@@ -1651,6 +1664,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                                   text: item.text,
                                 ))
                             .toList(),
+                        fontConfig: _fontConfig,
                         onSeek: _handleSeek,
                       )
                     : const Center(child: CircularProgressIndicator()),

@@ -6,8 +6,13 @@ import '../theme/app_theme.dart';
 /// Dialog for editing project-specific SRT font settings
 class ProjectFontSettingsDialog extends StatefulWidget {
   final String projectId;
+  final void Function(SrtFontConfig config)? onConfigChanged;
 
-  const ProjectFontSettingsDialog({super.key, required this.projectId});
+  const ProjectFontSettingsDialog({
+    super.key,
+    required this.projectId,
+    this.onConfigChanged,
+  });
 
   @override
   State<ProjectFontSettingsDialog> createState() =>
@@ -43,6 +48,8 @@ class _ProjectFontSettingsDialogState extends State<ProjectFontSettingsDialog> {
     });
     // Save in background
     newConfig.saveForProject(widget.projectId);
+    // Notify parent of change
+    widget.onConfigChanged?.call(newConfig);
   }
 
   Future<void> _resetToGlobal() async {
@@ -52,6 +59,8 @@ class _ProjectFontSettingsDialogState extends State<ProjectFontSettingsDialog> {
       _config = globalConfig;
       _hasProjectConfig = false;
     });
+    // Notify parent of change
+    widget.onConfigChanged?.call(globalConfig);
   }
 
   @override
