@@ -23,6 +23,7 @@ class _ProjectFontSettingsDialogState extends State<ProjectFontSettingsDialog> {
   SrtFontConfig _config = SrtFontConfig();
   bool _isLoading = true;
   bool _hasProjectConfig = false;
+  final FocusNode _sliderFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -180,21 +181,27 @@ class _ProjectFontSettingsDialogState extends State<ProjectFontSettingsDialog> {
                     _buildLabel(
                         'Font Size: ${_config.fontSize.toInt()}px', theme),
                     const SizedBox(height: 8),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: const Color(0xFF2563EB),
-                        inactiveTrackColor: theme.border,
-                        thumbColor: const Color(0xFF2563EB),
-                        overlayColor: const Color(0xFF2563EB).withAlpha(51),
-                      ),
-                      child: Slider(
-                        value: _config.fontSize,
-                        min: 14,
-                        max: 48,
-                        divisions: 34,
-                        onChanged: (value) {
-                          _updateConfig(_config.copyWith(fontSize: value));
-                        },
+                    FocusScope(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          activeTrackColor: const Color(0xFF2563EB),
+                          inactiveTrackColor: theme.border,
+                          thumbColor: const Color(0xFF2563EB),
+                          overlayColor: const Color(0xFF2563EB).withAlpha(51),
+                        ),
+                        child: Slider(
+                          value: _config.fontSize,
+                          min: 14,
+                          max: 48,
+                          divisions: 34,
+                          focusNode: _sliderFocusNode,
+                          onChangeStart: (_) {
+                            _sliderFocusNode.requestFocus();
+                          },
+                          onChanged: (value) {
+                            _updateConfig(_config.copyWith(fontSize: value));
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
