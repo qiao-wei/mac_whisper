@@ -13,6 +13,7 @@ class SrtFontSettingsTab extends StatefulWidget {
 class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
   SrtFontConfig _config = SrtFontConfig();
   bool _isLoading = true;
+  final FocusNode _sliderFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -117,6 +118,10 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
                 min: 14,
                 max: 48,
                 divisions: 34,
+                focusNode: _sliderFocusNode,
+                onChangeStart: (_) {
+                  _sliderFocusNode.requestFocus();
+                },
                 onChanged: (value) {
                   _updateConfig(_config.copyWith(fontSize: value));
                 },
