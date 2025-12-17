@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../models/srt_font_config.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
+import 'font_settings_controls.dart';
 
 class SrtFontSettingsTab extends StatefulWidget {
   const SrtFontSettingsTab({super.key});
@@ -14,7 +14,6 @@ class SrtFontSettingsTab extends StatefulWidget {
 class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
   SrtFontConfig _config = SrtFontConfig();
   bool _isLoading = true;
-  final FocusNode _sliderFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -35,47 +34,6 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
     setState(() => _config = newConfig);
     // Save in background
     newConfig.save();
-  }
-
-  void _showColorPicker(AppTheme theme) {
-    Color pickerColor = _config.fontColor;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: theme.settingsDialog,
-        title: Text(
-          'Pick a Color',
-          style: TextStyle(color: theme.textPrimary),
-        ),
-        content: SingleChildScrollView(
-          child: ColorPicker(
-            pickerColor: pickerColor,
-            onColorChanged: (color) {
-              pickerColor = color;
-            },
-            enableAlpha: false,
-            displayThumbColor: true,
-            pickerAreaHeightPercent: 0.8,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel', style: TextStyle(color: theme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _updateConfig(_config.copyWith(fontColor: pickerColor));
-              Navigator.of(context).pop();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2563EB),
-            ),
-            child: const Text('Apply', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -107,187 +65,15 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
             ),
             const SizedBox(height: 32),
 
-            // Font Family
-            _buildSectionTitle('Font Family', theme),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: theme.surface,
-                border: Border.all(color: theme.border),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _config.fontFamily,
-                  isExpanded: true,
-                  dropdownColor: theme.surface,
-                  style: TextStyle(color: theme.textPrimary, fontSize: 14),
-                  items: SrtFontConfig.availableFonts.map((font) {
-                    return DropdownMenuItem(
-                      value: font,
-                      child: Text(
-                        font,
-                        style: TextStyle(
-                          fontFamily: font == 'System Default' ? null : font,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      _updateConfig(_config.copyWith(fontFamily: value));
-                    }
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Font Size
-            _buildSectionTitle(
-                'Font Size: ${_config.fontSize.toInt()}px', theme),
-            const SizedBox(height: 12),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: const Color(0xFF2563EB),
-                inactiveTrackColor: theme.border,
-                thumbColor: const Color(0xFF2563EB),
-                overlayColor: const Color(0xFF2563EB).withAlpha(51),
-              ),
-              child: Slider(
-                value: _config.fontSize,
-                min: 14,
-                max: 48,
-                divisions: 34,
-                focusNode: _sliderFocusNode,
-                onChangeStart: (_) {
-                  _sliderFocusNode.requestFocus();
-                },
-                onChanged: (value) {
-                  _updateConfig(_config.copyWith(fontSize: value));
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Font Weight
-            _buildSectionTitle('Font Weight', theme),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildWeightOption('Normal', false, theme),
-                const SizedBox(width: 12),
-                _buildWeightOption('Bold', true, theme),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Font Color
-            _buildSectionTitle('Font Color', theme),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                // Current color display
-                GestureDetector(
-                  onTap: () => _showColorPicker(theme),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: _config.fontColor,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: theme.border, width: 2),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Pick color button
-                OutlinedButton.icon(
-                  onPressed: () => _showColorPicker(theme),
-                  icon: const Icon(Icons.palette, size: 18),
-                  label: const Text('Choose Color'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.textPrimary,
-                    side: BorderSide(color: theme.border),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // Preview
-            _buildSectionTitle('Preview', theme),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: theme.border),
-              ),
-              child: Center(
-                child: Text(
-                  'Sample Subtitle Text\n示例字幕文本',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: _config.fontFamily == 'System Default'
-                        ? null
-                        : _config.fontFamily,
-                    fontSize: _config.fontSize,
-                    fontWeight:
-                        _config.isBold ? FontWeight.bold : FontWeight.normal,
-                    color: _config.fontColor,
-                    height: 1.5,
-                  ),
-                ),
-              ),
+            // Shared font settings controls
+            ThemedFontSettingsControls(
+              config: _config,
+              onConfigChanged: _updateConfig,
+              theme: theme,
+              showPreview: true,
+              spacing: 24,
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title, AppTheme theme) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: theme.textPrimary,
-      ),
-    );
-  }
-
-  Widget _buildWeightOption(String label, bool isBold, AppTheme theme) {
-    final isSelected = _config.isBold == isBold;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          _updateConfig(_config.copyWith(isBold: isBold));
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF2563EB) : theme.surface,
-            border: Border.all(
-              color: isSelected ? const Color(0xFF2563EB) : theme.border,
-            ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : theme.textPrimary,
-                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
         ),
       ),
     );
