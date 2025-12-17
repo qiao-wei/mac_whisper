@@ -2,17 +2,24 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/database_service.dart';
 
+/// Subtitle position options
+enum SubtitlePosition { top, center, bottom }
+
 class SrtFontConfig {
   String fontFamily;
   double fontSize;
   bool isBold;
   Color fontColor;
+  SubtitlePosition position;
+  double marginPercent; // Margin from edge as percentage of video height (0-50)
 
   SrtFontConfig({
     this.fontFamily = 'System Default',
     this.fontSize = 16.0,
     this.isBold = false,
     this.fontColor = Colors.white,
+    this.position = SubtitlePosition.bottom,
+    this.marginPercent = 5.0, // 5% from edge by default
   });
 
   static const List<String> availableFonts = [
@@ -45,6 +52,8 @@ class SrtFontConfig {
         'fontSize': fontSize,
         'isBold': isBold,
         'fontColor': fontColor.value,
+        'position': position.index,
+        'marginPercent': marginPercent,
       };
 
   factory SrtFontConfig.fromJson(Map<String, dynamic> json) {
@@ -53,6 +62,9 @@ class SrtFontConfig {
       fontSize: (json['fontSize'] ?? 16.0).toDouble(),
       isBold: json['isBold'] ?? false,
       fontColor: Color(json['fontColor'] ?? Colors.white.value),
+      position: SubtitlePosition.values[json['position'] ?? 2],
+      marginPercent:
+          (json['marginPercent'] ?? json['marginPixels'] ?? 5.0).toDouble(),
     );
   }
 
@@ -112,12 +124,16 @@ class SrtFontConfig {
     double? fontSize,
     bool? isBold,
     Color? fontColor,
+    SubtitlePosition? position,
+    double? marginPercent,
   }) {
     return SrtFontConfig(
       fontFamily: fontFamily ?? this.fontFamily,
       fontSize: fontSize ?? this.fontSize,
       isBold: isBold ?? this.isBold,
       fontColor: fontColor ?? this.fontColor,
+      position: position ?? this.position,
+      marginPercent: marginPercent ?? this.marginPercent,
     );
   }
 }

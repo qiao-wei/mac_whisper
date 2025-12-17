@@ -118,6 +118,34 @@ class _ThemedFontSettingsControlsState
     );
   }
 
+  Widget _buildPositionOption(String label, SubtitlePosition position) {
+    final isSelected = widget.config.position == position;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () =>
+            widget.onConfigChanged(widget.config.copyWith(position: position)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF2563EB) : widget.theme.surface,
+            border: Border.all(
+              color: isSelected ? const Color(0xFF2563EB) : widget.theme.border,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : widget.theme.textPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
@@ -239,6 +267,46 @@ class _ThemedFontSettingsControlsState
             ),
           ],
         ),
+        SizedBox(height: spacing),
+
+        // Subtitle Position
+        _buildLabel('Subtitle Position'),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            _buildPositionOption('Top', SubtitlePosition.top),
+            const SizedBox(width: 12),
+            _buildPositionOption('Center', SubtitlePosition.center),
+            const SizedBox(width: 12),
+            _buildPositionOption('Bottom', SubtitlePosition.bottom),
+          ],
+        ),
+
+        // Margin (show for top and bottom positions)
+        if (widget.config.position != SubtitlePosition.center) ...[
+          SizedBox(height: spacing),
+          _buildLabel(
+              'Distance from ${widget.config.position == SubtitlePosition.top ? 'Top' : 'Bottom'}: ${widget.config.marginPercent.toInt()}%'),
+          const SizedBox(height: 8),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: const Color(0xFF2563EB),
+              inactiveTrackColor: theme.border,
+              thumbColor: const Color(0xFF2563EB),
+              overlayColor: const Color(0xFF2563EB).withAlpha(51),
+            ),
+            child: Slider(
+              value: widget.config.marginPercent,
+              min: 0,
+              max: 50,
+              divisions: 50,
+              onChanged: (value) {
+                widget.onConfigChanged(
+                    widget.config.copyWith(marginPercent: value));
+              },
+            ),
+          ),
+        ],
 
         // Preview (optional)
         if (widget.showPreview) ...[

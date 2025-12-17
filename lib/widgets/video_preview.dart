@@ -101,6 +101,34 @@ class _VideoPreviewState extends State<VideoPreview> {
     );
   }
 
+  /// Get the alignment for subtitles based on fontConfig position
+  Alignment _getSubtitleAlignment() {
+    final position = widget.fontConfig?.position ?? SubtitlePosition.bottom;
+    switch (position) {
+      case SubtitlePosition.top:
+        return Alignment.topCenter;
+      case SubtitlePosition.center:
+        return Alignment.center;
+      case SubtitlePosition.bottom:
+        return Alignment.bottomCenter;
+    }
+  }
+
+  /// Get the padding for subtitles based on fontConfig position
+  EdgeInsets _getSubtitlePadding(double videoHeight) {
+    final position = widget.fontConfig?.position ?? SubtitlePosition.bottom;
+    final marginPercent = widget.fontConfig?.marginPercent ?? 5.0;
+    final marginPixels = videoHeight * (marginPercent / 100);
+    switch (position) {
+      case SubtitlePosition.top:
+        return EdgeInsets.only(top: marginPixels, left: 20, right: 20);
+      case SubtitlePosition.center:
+        return const EdgeInsets.symmetric(horizontal: 20);
+      case SubtitlePosition.bottom:
+        return EdgeInsets.only(bottom: marginPixels, left: 20, right: 20);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Focus(
@@ -121,45 +149,61 @@ class _VideoPreviewState extends State<VideoPreview> {
               if (widget.initialized)
                 AspectRatio(
                   aspectRatio: widget.controller.value.aspectRatio,
-                  child: VideoPlayer(widget.controller),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final videoHeight = constraints.maxHeight;
+                      return Stack(
+                        children: [
+                          VideoPlayer(widget.controller),
+                          Positioned.fill(
+                            child: Align(
+                              alignment: _getSubtitleAlignment(),
+                              child: Padding(
+                                padding: _getSubtitlePadding(videoHeight),
+                                child: ValueListenableBuilder(
+                                  valueListenable: widget.controller,
+                                  builder: (_, value, __) {
+                                    final text = _getCurrentSubtitle();
+                                    if (text == null) return const SizedBox();
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black54,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        text,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontFamily:
+                                              widget.fontConfig?.fontFamily ==
+                                                      'System Default'
+                                                  ? null
+                                                  : widget.fontConfig?.fontFamily,
+                                          color: widget.fontConfig?.fontColor ??
+                                              Colors.white,
+                                          fontSize:
+                                              widget.fontConfig?.fontSize ?? 18,
+                                          fontWeight:
+                                              (widget.fontConfig?.isBold ?? false)
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 )
               else
                 const CircularProgressIndicator(),
-              Positioned(
-                bottom: 60,
-                left: 20,
-                right: 20,
-                child: ValueListenableBuilder(
-                  valueListenable: widget.controller,
-                  builder: (_, value, __) {
-                    final text = _getCurrentSubtitle();
-                    if (text == null) return const SizedBox();
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        text,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily:
-                              widget.fontConfig?.fontFamily == 'System Default'
-                                  ? null
-                                  : widget.fontConfig?.fontFamily,
-                          color: widget.fontConfig?.fontColor ?? Colors.white,
-                          fontSize: widget.fontConfig?.fontSize ?? 18,
-                          fontWeight: (widget.fontConfig?.isBold ?? false)
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
               Positioned(
                 left: 0,
                 right: 0,
@@ -404,6 +448,38 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
     return '$m:$s';
   }
 
+  /// Get the alignment for subtitles based on fontConfig position
+  Alignment _getSubtitleAlignment() {
+    final position = widget.fontConfig?.position ?? SubtitlePosition.bottom;
+    switch (position) {
+      case SubtitlePosition.top:
+        return Alignment.topCenter;
+      case SubtitlePosition.center:
+        return Alignment.center;
+      case SubtitlePosition.bottom:
+        return Alignment.bottomCenter;
+    }
+  }
+
+  /// Get the padding for subtitles based on fontConfig position
+  /// Uses percentage of video height for consistent positioning when merged
+  EdgeInsets _getSubtitlePadding(double videoHeight) {
+    final position = widget.fontConfig?.position ?? SubtitlePosition.bottom;
+    final marginPercent = widget.fontConfig?.marginPercent ?? 5.0;
+    final marginPixels = videoHeight * (marginPercent / 100);
+    // Add extra space for controls at bottom (about 60px for fullscreen)
+    final controlsOffset = position == SubtitlePosition.bottom ? 60 : 0;
+    switch (position) {
+      case SubtitlePosition.top:
+        return EdgeInsets.only(top: marginPixels, left: 40, right: 40);
+      case SubtitlePosition.center:
+        return const EdgeInsets.symmetric(horizontal: 40);
+      case SubtitlePosition.bottom:
+        return EdgeInsets.only(
+            bottom: marginPixels + controlsOffset, left: 40, right: 40);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -429,35 +505,49 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
                     child: VideoPlayer(widget.controller),
                   ),
                 ),
-                Positioned(
-                  bottom: 100,
-                  left: 40,
-                  right: 40,
-                  child: ValueListenableBuilder(
-                    valueListenable: widget.controller,
-                    builder: (_, value, __) {
-                      final text = _getCurrentSubtitle();
-                      if (text == null) return const SizedBox();
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          text,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: widget.fontConfig?.fontFamily ==
-                                    'System Default'
-                                ? null
-                                : widget.fontConfig?.fontFamily,
-                            color: widget.fontConfig?.fontColor ?? Colors.white,
-                            fontSize: (widget.fontConfig?.fontSize ?? 18) * 1.5,
-                            fontWeight: (widget.fontConfig?.isBold ?? false)
-                                ? FontWeight.bold
-                                : FontWeight.w500,
+                Positioned.fill(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Calculate video height from screen dimensions
+                      final videoHeight = constraints.maxWidth /
+                          widget.controller.value.aspectRatio;
+                      return Align(
+                        alignment: _getSubtitleAlignment(),
+                        child: Padding(
+                          padding: _getSubtitlePadding(videoHeight),
+                          child: ValueListenableBuilder(
+                            valueListenable: widget.controller,
+                            builder: (_, value, __) {
+                              final text = _getCurrentSubtitle();
+                              if (text == null) return const SizedBox();
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  text,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: widget.fontConfig?.fontFamily ==
+                                            'System Default'
+                                        ? null
+                                        : widget.fontConfig?.fontFamily,
+                                    color: widget.fontConfig?.fontColor ??
+                                        Colors.white,
+                                    fontSize:
+                                        (widget.fontConfig?.fontSize ?? 18) *
+                                            1.5,
+                                    fontWeight:
+                                        (widget.fontConfig?.isBold ?? false)
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       );
