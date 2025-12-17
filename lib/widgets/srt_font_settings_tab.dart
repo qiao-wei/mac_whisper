@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../models/srt_font_config.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
@@ -34,6 +35,47 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
     setState(() => _config = newConfig);
     // Save in background
     newConfig.save();
+  }
+
+  void _showColorPicker(AppTheme theme) {
+    Color pickerColor = _config.fontColor;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: theme.settingsDialog,
+        title: Text(
+          'Pick a Color',
+          style: TextStyle(color: theme.textPrimary),
+        ),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: pickerColor,
+            onColorChanged: (color) {
+              pickerColor = color;
+            },
+            enableAlpha: false,
+            displayThumbColor: true,
+            pickerAreaHeightPercent: 0.8,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel', style: TextStyle(color: theme.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _updateConfig(_config.copyWith(fontColor: pickerColor));
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+            ),
+            child: const Text('Apply', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -137,6 +179,41 @@ class _SrtFontSettingsTabState extends State<SrtFontSettingsTab> {
                 _buildWeightOption('Normal', false, theme),
                 const SizedBox(width: 12),
                 _buildWeightOption('Bold', true, theme),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Font Color
+            _buildSectionTitle('Font Color', theme),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                // Current color display
+                GestureDetector(
+                  onTap: () => _showColorPicker(theme),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: _config.fontColor,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: theme.border, width: 2),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Pick color button
+                OutlinedButton.icon(
+                  onPressed: () => _showColorPicker(theme),
+                  icon: const Icon(Icons.palette, size: 18),
+                  label: const Text('Choose Color'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.textPrimary,
+                    side: BorderSide(color: theme.border),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 32),

@@ -149,7 +149,7 @@ class _VideoPreviewState extends State<VideoPreview> {
                               widget.fontConfig?.fontFamily == 'System Default'
                                   ? null
                                   : widget.fontConfig?.fontFamily,
-                          color: Colors.white,
+                          color: widget.fontConfig?.fontColor ?? Colors.white,
                           fontSize: widget.fontConfig?.fontSize ?? 18,
                           fontWeight: (widget.fontConfig?.isBold ?? false)
                               ? FontWeight.bold
@@ -453,7 +453,7 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
                                     'System Default'
                                 ? null
                                 : widget.fontConfig?.fontFamily,
-                            color: Colors.white,
+                            color: widget.fontConfig?.fontColor ?? Colors.white,
                             fontSize: (widget.fontConfig?.fontSize ?? 18) * 1.5,
                             fontWeight: (widget.fontConfig?.isBold ?? false)
                                 ? FontWeight.bold

@@ -28,6 +28,18 @@ class SrtFontConfig {
     'Menlo',
   ];
 
+  /// Preset colors for the font color picker
+  static const List<Color> presetColors = [
+    Colors.white,
+    Color(0xFFFFFF00), // Yellow
+    Color(0xFF00FFFF), // Cyan
+    Color(0xFF00FF00), // Green
+    Color(0xFFFF6B6B), // Light Red
+    Color(0xFFFFB347), // Orange
+    Color(0xFFDA70D6), // Orchid
+    Color(0xFF87CEEB), // Sky Blue
+  ];
+
   Map<String, dynamic> toJson() => {
         'fontFamily': fontFamily,
         'fontSize': fontSize,
