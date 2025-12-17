@@ -213,8 +213,8 @@ class _ThemedFontSettingsControlsState
             GestureDetector(
               onTap: _showColorPicker,
               child: Container(
-                width: 48,
-                height: 48,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: widget.config.fontColor,
                   borderRadius: BorderRadius.circular(8),

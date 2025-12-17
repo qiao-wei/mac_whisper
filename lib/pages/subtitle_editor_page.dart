@@ -1973,36 +1973,35 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                       //           fontWeight: FontWeight.bold,
                       //           color: Colors.white)),
                       // ),
-                      // Padding(
-                      //   padding: const EdgeInsets.symmetric(horizontal: 16),
-                      //   child: Row(
-                      //     children: [
-                      //       Checkbox(
-                      //         value: mergeToVideo,
-                      //         onChanged: (v) =>
-                      //             setState(() => mergeToVideo = v ?? false),
-                      //         fillColor: WidgetStateProperty.resolveWith(
-                      //             (states) =>
-                      //                 states.contains(WidgetState.selected)
-                      //                     ? const Color(0xFF135bec)
-                      //                     : Colors.transparent),
-                      //         side: BorderSide(
-                      //             color: Colors.grey.shade700, width: 2),
-                      //       ),
-                      //       const SizedBox(width: 8),
-                      //       const Text('Merge subtitles into original video',
-                      //           style: TextStyle(
-                      //               fontSize: 14, color: Colors.white)),
-                      //     ],
-                      //   ),
-                      // ),
-                      // Padding(
-                      //   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      //   child: Text(
-                      //       'This option is only available for local video files.',
-                      //       style: TextStyle(
-                      //           fontSize: 12, color: Colors.grey.shade400)),
-                      // ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: mergeToVideo,
+                              onChanged: (v) =>
+                                  setState(() => mergeToVideo = v ?? false),
+                              fillColor: WidgetStateProperty.resolveWith(
+                                  (states) =>
+                                      states.contains(WidgetState.selected)
+                                          ? const Color(0xFF2563EB)
+                                          : Colors.transparent),
+                              side: BorderSide(color: theme.border, width: 2),
+                            ),
+                            const SizedBox(width: 8),
+                            Text('Merge subtitles into original video',
+                                style: TextStyle(
+                                    fontSize: 14, color: theme.textPrimary)),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: Text(
+                            'This option is only available for local video files.',
+                            style: TextStyle(
+                                fontSize: 12, color: theme.textSecondary)),
+                      ),
                     ],
                   ),
                 ),
