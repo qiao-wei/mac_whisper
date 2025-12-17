@@ -30,6 +30,7 @@
 		85073BAD0B00590464046202 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 129AC0801EC6F654EEEF30DA /* Pods_RunnerTests.framework */; };
 		CCA338D0092CC1DB4DA098F8 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F0AA9B182B13CE7542168C70 /* Pods_Runner.framework */; };
 		AE1234560001000100010001 /* AudioExtractorPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010002 /* AudioExtractorPlugin.swift */; };
+		AE1234560001000100020001 /* SubtitleMergerPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100020002 /* SubtitleMergerPlugin.swift */; };
 		AE1234560001000100010003 /* whisper-cli in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010004 /* whisper-cli */; };
 		AE1234560001000100010005 /* yt-dlp in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010006 /* yt-dlp */; };
 		AE1234560001000100010007 /* libwhisper.1.dylib in Resources */ = {isa = PBXBuildFile; fileRef = AE1234560001000100010008 /* libwhisper.1.dylib */; };
@@ -91,6 +92,7 @@
 		AE123456000100010001000E /* libggml-cpu.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-cpu.0.dylib"; sourceTree = "<group>"; };
 		AE1234560001000100010010 /* libggml-blas.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-blas.0.dylib"; sourceTree = "<group>"; };
 		AE1234560001000100010012 /* libggml-metal.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libggml-metal.0.dylib"; sourceTree = "<group>"; };
+		AE1234560001000100020002 /* SubtitleMergerPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleMergerPlugin.swift; sourceTree = "<group>"; };
 		33CEB47222A05771004F2AC0 /* Flutter-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Debug.xcconfig"; sourceTree = "<group>"; };
 		33CEB47422A05771004F2AC0 /* Flutter-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Release.xcconfig"; sourceTree = "<group>"; };
 		33CEB47722A0578A004F2AC0 /* Flutter-Generated.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Flutter-Generated.xcconfig"; path = "ephemeral/Flutter-Generated.xcconfig"; sourceTree = "<group>"; };
@@ -196,6 +198,7 @@
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				AE1234560001000100010002 /* AudioExtractorPlugin.swift */,
+				AE1234560001000100020002 /* SubtitleMergerPlugin.swift */,
 				AE1234560001000100010004 /* whisper-cli */,
 				AE1234560001000100010006 /* yt-dlp */,
 				AE1234560001000100010008 /* libwhisper.1.dylib */,
@@ -476,6 +479,7 @@
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
 				AE1234560001000100010001 /* AudioExtractorPlugin.swift in Sources */,
+				AE1234560001000100020001 /* SubtitleMergerPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

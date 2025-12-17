@@ -12,6 +12,7 @@ class MainFlutterWindow: NSWindow {
 
     // Register custom plugins
     AudioExtractorPlugin.register(with: flutterViewController.registrar(forPlugin: "AudioExtractorPlugin"))
+    SubtitleMergerPlugin.register(with: flutterViewController.registrar(forPlugin: "SubtitleMergerPlugin"))
 
     super.awakeFromNib()
   }

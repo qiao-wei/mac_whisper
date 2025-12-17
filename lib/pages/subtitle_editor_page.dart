@@ -1714,6 +1714,92 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     }
   }
 
+  Future<void> _exportAndMergeSubtitles(String format) async {
+    // Get video path
+    final videoPath = await _db.getProjectVideoPath(widget.projectId!);
+    if (videoPath == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No video file found for this project')),
+        );
+      }
+      return;
+    }
+
+    // Prepare output path for merged video
+    final baseName = widget.projectName?.replaceAll(RegExp(r'\.[^.]+$'), '') ??
+        'merged_video';
+    final outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save Merged Video',
+      fileName: '${baseName}_subtitled.mp4',
+      type: FileType.custom,
+      allowedExtensions: ['mp4'],
+    );
+
+    if (outputPath == null) return;
+
+    // Show progress indicator
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: MacWhisperApp.of(context)?.theme.settingsDialog,
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 20),
+              Text('Merging subtitles...',
+                  style: TextStyle(
+                      color: MacWhisperApp.of(context)?.theme.textPrimary)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    try {
+      // Prepare subtitles data for native plugin
+      final subtitlesData = _subtitles.map((sub) {
+        return {
+          'text': sub.text,
+          'startTime': _parseDuration(sub.startTime).inMilliseconds / 1000.0,
+          'endTime': _parseDuration(sub.endTime).inMilliseconds / 1000.0,
+        };
+      }).toList();
+
+      // Prepare font config
+      final fontConfigData = _fontConfig?.toJson() ?? SrtFontConfig().toJson();
+
+      // Call native plugin
+      const channel = MethodChannel('com.macwhisper/subtitle_merger');
+      final result = await channel.invokeMethod('mergeSubtitles', {
+        'videoPath': videoPath,
+        'outputPath': outputPath,
+        'subtitles': subtitlesData,
+        'fontConfig': fontConfigData,
+      });
+
+      // Close progress dialog
+      if (mounted) Navigator.of(context).pop();
+
+      if (result != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Video saved to $result')),
+        );
+      }
+    } catch (e) {
+      // Close progress dialog
+      if (mounted) Navigator.of(context).pop();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to merge subtitles: $e')),
+        );
+      }
+    }
+  }
+
   String _generateSRT() {
     final buffer = StringBuffer();
     for (var i = 0; i < _subtitles.length; i++) {
@@ -2027,7 +2113,11 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
-                          _exportSubtitles(selectedFormat);
+                          if (mergeToVideo) {
+                            _exportAndMergeSubtitles(selectedFormat);
+                          } else {
+                            _exportSubtitles(selectedFormat);
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF135bec),
