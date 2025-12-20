@@ -28,10 +28,18 @@ class ThemedFontSettingsControls extends StatefulWidget {
 class _ThemedFontSettingsControlsState
     extends State<ThemedFontSettingsControls> {
   final FocusNode _sliderFocusNode = FocusNode();
+  final FocusNode _marginFocusNode = FocusNode();
+  final FocusNode _bgPaddingFocusNode = FocusNode();
+  final FocusNode _bgCornerFocusNode = FocusNode();
+  final FocusNode _bgOpacityFocusNode = FocusNode();
 
   @override
   void dispose() {
     _sliderFocusNode.dispose();
+    _marginFocusNode.dispose();
+    _bgPaddingFocusNode.dispose();
+    _bgCornerFocusNode.dispose();
+    _bgOpacityFocusNode.dispose();
     super.dispose();
   }
 
@@ -288,22 +296,26 @@ class _ThemedFontSettingsControlsState
           _buildLabel(
               'Distance from ${widget.config.position == SubtitlePosition.top ? 'Top' : 'Bottom'}: ${widget.config.marginPercent.toInt()}%'),
           const SizedBox(height: 8),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: const Color(0xFF2563EB),
-              inactiveTrackColor: theme.border,
-              thumbColor: const Color(0xFF2563EB),
-              overlayColor: const Color(0xFF2563EB).withAlpha(51),
-            ),
-            child: Slider(
-              value: widget.config.marginPercent,
-              min: 0,
-              max: 50,
-              divisions: 50,
-              onChanged: (value) {
-                widget.onConfigChanged(
-                    widget.config.copyWith(marginPercent: value));
-              },
+          FocusScope(
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: const Color(0xFF2563EB),
+                inactiveTrackColor: theme.border,
+                thumbColor: const Color(0xFF2563EB),
+                overlayColor: const Color(0xFF2563EB).withAlpha(51),
+              ),
+              child: Slider(
+                value: widget.config.marginPercent,
+                min: 0,
+                max: 50,
+                divisions: 50,
+                focusNode: _marginFocusNode,
+                onChangeStart: (_) => _marginFocusNode.requestFocus(),
+                onChanged: (value) {
+                  widget.onConfigChanged(
+                      widget.config.copyWith(marginPercent: value));
+                },
+              ),
             ),
           ),
         ],
@@ -312,64 +324,76 @@ class _ThemedFontSettingsControlsState
         SizedBox(height: spacing),
         _buildLabel('Background Padding: ${widget.config.bgPadding.toInt()}'),
         const SizedBox(height: 8),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: const Color(0xFF2563EB),
-            inactiveTrackColor: theme.border,
-            thumbColor: const Color(0xFF2563EB),
-            overlayColor: const Color(0xFF2563EB).withAlpha(51),
-          ),
-          child: Slider(
-            value: widget.config.bgPadding,
-            min: 0,
-            max: 20,
-            divisions: 20,
-            onChanged: (value) {
-              widget.onConfigChanged(widget.config.copyWith(bgPadding: value));
-            },
+        FocusScope(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: const Color(0xFF2563EB),
+              inactiveTrackColor: theme.border,
+              thumbColor: const Color(0xFF2563EB),
+              overlayColor: const Color(0xFF2563EB).withAlpha(51),
+            ),
+            child: Slider(
+              value: widget.config.bgPadding,
+              min: 0,
+              max: 20,
+              divisions: 20,
+              focusNode: _bgPaddingFocusNode,
+              onChangeStart: (_) => _bgPaddingFocusNode.requestFocus(),
+              onChanged: (value) {
+                widget.onConfigChanged(widget.config.copyWith(bgPadding: value));
+              },
+            ),
           ),
         ),
         SizedBox(height: spacing),
         _buildLabel(
             'Background Corner Radius: ${widget.config.bgCornerRadius.toInt()}'),
         const SizedBox(height: 8),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: const Color(0xFF2563EB),
-            inactiveTrackColor: theme.border,
-            thumbColor: const Color(0xFF2563EB),
-            overlayColor: const Color(0xFF2563EB).withAlpha(51),
-          ),
-          child: Slider(
-            value: widget.config.bgCornerRadius,
-            min: 0,
-            max: 20,
-            divisions: 20,
-            onChanged: (value) {
-              widget.onConfigChanged(
-                  widget.config.copyWith(bgCornerRadius: value));
-            },
+        FocusScope(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: const Color(0xFF2563EB),
+              inactiveTrackColor: theme.border,
+              thumbColor: const Color(0xFF2563EB),
+              overlayColor: const Color(0xFF2563EB).withAlpha(51),
+            ),
+            child: Slider(
+              value: widget.config.bgCornerRadius,
+              min: 0,
+              max: 20,
+              divisions: 20,
+              focusNode: _bgCornerFocusNode,
+              onChangeStart: (_) => _bgCornerFocusNode.requestFocus(),
+              onChanged: (value) {
+                widget.onConfigChanged(
+                    widget.config.copyWith(bgCornerRadius: value));
+              },
+            ),
           ),
         ),
         SizedBox(height: spacing),
         _buildLabel(
             'Background Opacity: ${(widget.config.bgOpacity * 100).toInt()}%'),
         const SizedBox(height: 8),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: const Color(0xFF2563EB),
-            inactiveTrackColor: theme.border,
-            thumbColor: const Color(0xFF2563EB),
-            overlayColor: const Color(0xFF2563EB).withAlpha(51),
-          ),
-          child: Slider(
-            value: widget.config.bgOpacity,
-            min: 0,
-            max: 1,
-            divisions: 100,
-            onChanged: (value) {
-              widget.onConfigChanged(widget.config.copyWith(bgOpacity: value));
-            },
+        FocusScope(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: const Color(0xFF2563EB),
+              inactiveTrackColor: theme.border,
+              thumbColor: const Color(0xFF2563EB),
+              overlayColor: const Color(0xFF2563EB).withAlpha(51),
+            ),
+            child: Slider(
+              value: widget.config.bgOpacity,
+              min: 0,
+              max: 1,
+              divisions: 100,
+              focusNode: _bgOpacityFocusNode,
+              onChangeStart: (_) => _bgOpacityFocusNode.requestFocus(),
+              onChanged: (value) {
+                widget.onConfigChanged(widget.config.copyWith(bgOpacity: value));
+              },
+            ),
           ),
         ),
 
