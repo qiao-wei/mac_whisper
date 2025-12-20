@@ -222,51 +222,19 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
             // Create opacity animation to show/hide subtitle
             let animation = CAKeyframeAnimation(keyPath: "opacity")
             let videoDuration = CMTimeGetSeconds(asset.duration)
-            
-            // Calculate keyframes - handle edge cases for early/late subtitles
+
+            // Calculate normalized times
             let startNormalized = startTime / videoDuration
             let endNormalized = endTime / videoDuration
-            
-            // Build keyframes dynamically to avoid duplicate/near-duplicate values
-            var keyTimes: [NSNumber] = []
-            var values: [Float] = []
-            
-            // If subtitle starts after the beginning, add initial invisible state
-            if startNormalized > 0.002 {
-                keyTimes.append(0.0)
-                keyTimes.append(NSNumber(value: startNormalized - 0.001))
-                values.append(0.0)
-                values.append(0.0)
-            } else {
-                // Subtitle starts at or near beginning - start visible
-                keyTimes.append(0.0)
-                values.append(1.0)
-            }
-            
-            // Visible during subtitle display
-            keyTimes.append(NSNumber(value: max(0.001, startNormalized)))
-            values.append(1.0)
-            keyTimes.append(NSNumber(value: min(0.999, endNormalized)))
-            values.append(1.0)
-            
-            // If subtitle ends before the end, add final invisible state
-            if endNormalized < 0.998 {
-                keyTimes.append(NSNumber(value: endNormalized + 0.001))
-                keyTimes.append(1.0)
-                values.append(0.0)
-                values.append(0.0)
-            } else {
-                // Subtitle ends at or near the end - stay visible
-                keyTimes.append(1.0)
-                values.append(1.0)
-            }
-            
-            animation.keyTimes = keyTimes
-            animation.values = values
+
+            // Simple keyframes: invisible before start, visible during, invisible after
+            animation.keyTimes = [0.0, NSNumber(value: startNormalized), NSNumber(value: endNormalized), 1.0]
+            animation.values = [0.0, 1.0, 0.0, 0.0]
             animation.duration = videoDuration
             animation.beginTime = AVCoreAnimationBeginTimeAtZero
             animation.isRemovedOnCompletion = false
             animation.fillMode = .forwards
+            animation.calculationMode = .discrete
             
             // Apply animation to container layer
             textContainerLayer.add(animation, forKey: "opacity")
