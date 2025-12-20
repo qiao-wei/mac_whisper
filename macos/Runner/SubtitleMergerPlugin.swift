@@ -153,11 +153,17 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
                 context: nil
             ).size
             
-            // Padding similar to Flutter preview (horizontal: 16, vertical: 8)
+            // Padding similar to Flutter preview (horizontal: 16, vertical: 1)
             let horizontalPadding: CGFloat = 16 * scaleFactor
-            let verticalPadding: CGFloat = 8 * scaleFactor
+            let verticalPadding: CGFloat = 1 * scaleFactor
+            
+            // Calculate line height and dimensions
+            let singleLineHeight = font.ascender + abs(font.descender) + font.leading
+            let numberOfLines = max(1, Int(ceil(textSize.height / singleLineHeight)))
+            let contentHeight = max(textSize.height, singleLineHeight * CGFloat(numberOfLines))
+            
             let containerWidth = textSize.width + horizontalPadding * 2
-            let containerHeight = textSize.height + verticalPadding * 2
+            let containerHeight = contentHeight + verticalPadding * 1
             
             // Calculate Y position based on position setting
             // CALayer uses bottom-left origin (y=0 is bottom)
@@ -171,7 +177,18 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
                 yPosition = marginPixels
             }
             
-            // Create text layer (no background, just text with shadow for readability)
+            // Create container layer for background
+            let textContainerLayer = CALayer()
+            textContainerLayer.frame = CGRect(
+                x: (renderSize.width - containerWidth) / 2,
+                y: yPosition,
+                width: containerWidth,
+                height: containerHeight
+            )
+            textContainerLayer.backgroundColor = CGColor(red: 0, green: 0, blue: 0, alpha: 0.54)
+            textContainerLayer.cornerRadius = 4.0 * scaleFactor // Match Flutter preview radius
+            
+            // Create text layer
             let textLayer = CATextLayer()
             textLayer.string = text
             textLayer.font = font
@@ -180,12 +197,14 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
             textLayer.alignmentMode = .center
             textLayer.contentsScale = 2.0
             textLayer.isWrapped = true
-                        
+            
+            // Center text in container - account for contentHeight vs textSize.height difference
+            let textY = verticalPadding + (contentHeight - textSize.height) / 2
             textLayer.frame = CGRect(
-                x: (renderSize.width - containerWidth) / 2,
-                y: yPosition,
-                width: containerWidth,
-                height: containerHeight
+                x: horizontalPadding,
+                y: textY,
+                width: textSize.width,
+                height: textSize.height
             )
             
             // Create opacity animation to show/hide subtitle
@@ -235,14 +254,15 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
             animation.duration = videoDuration
             animation.beginTime = AVCoreAnimationBeginTimeAtZero
             animation.isRemovedOnCompletion = false
-            animation.fillMode = .forwards
+            animation.fillMode = .both
             
-            // Apply animation to text layer only
-            textLayer.add(animation, forKey: "opacity")
-            textLayer.opacity = 0
+            // Apply animation to container layer
+            textContainerLayer.add(animation, forKey: "opacity")
+            textContainerLayer.opacity = 0
             
-            // Add text layer to parent
-            subtitleParentLayer.addSublayer(textLayer)
+            // Add layers
+            textContainerLayer.addSublayer(textLayer)
+            subtitleParentLayer.addSublayer(textContainerLayer)
         }
         
         // Create video composition
