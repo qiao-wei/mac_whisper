@@ -11,6 +11,7 @@ import '../models/subtitle.dart';
 import '../main.dart';
 import '../theme/app_theme.dart';
 import '../widgets/project_font_settings_dialog.dart';
+import '../widgets/font_settings_controls.dart';
 import '../models/srt_font_config.dart';
 
 class SubtitleItem {
@@ -73,6 +74,7 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
   double _previewPanelRatio = 0.4; // Default 40% for preview panel
   bool _isDraggingDivider = false;
   bool _isHoveringDivider = false;
+  bool _showFontSettings = false; // Toggle for font settings panel
   final Map<int, GlobalKey> _rowKeys = {};
   SrtFontConfig? _fontConfig;
 
@@ -982,6 +984,22 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
             child: LayoutBuilder(
               builder: (layoutContext, constraints) {
                 final totalWidth = constraints.maxWidth;
+                const fontSettingsWidth = 320.0;
+
+                // When font settings is shown, hide subtitle list for better preview
+                if (_showFontSettings) {
+                  final previewWidth = totalWidth - fontSettingsWidth;
+                  return Row(
+                    children: [
+                      SizedBox(
+                        width: previewWidth,
+                        child: _buildPreviewPanel(),
+                      ),
+                      _buildFontSettingsPanel(fontSettingsWidth),
+                    ],
+                  );
+                }
+
                 final previewWidth =
                     _showPreview ? totalWidth * _previewPanelRatio : 0.0;
                 final subtitleWidth = totalWidth - previewWidth;
@@ -1023,9 +1041,8 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                               if (box != null) {
                                 final localPos =
                                     box.globalToLocal(details.globalPosition);
-                                final newSubtitleWidth = localPos.dx;
                                 final newRatio =
-                                    1.0 - (newSubtitleWidth / totalWidth);
+                                    1.0 - (localPos.dx / totalWidth);
                                 setState(() {
                                   _previewPanelRatio = newRatio.clamp(0.2, 0.6);
                                 });
@@ -1252,19 +1269,15 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
           const SizedBox(width: 8),
           // Font settings button
           IconButton(
-            icon: const Icon(Icons.text_fields, size: 18),
+            icon: Icon(
+              Icons.text_fields,
+              size: 18,
+              color: _showFontSettings ? const Color(0xFF2563EB) : null,
+            ),
             color: theme.textSecondary,
             tooltip: 'Font Settings',
             onPressed: widget.projectId != null
-                ? () => showDialog(
-                      context: context,
-                      builder: (_) => ProjectFontSettingsDialog(
-                        projectId: widget.projectId!,
-                        onConfigChanged: (config) {
-                          setState(() => _fontConfig = config);
-                        },
-                      ),
-                    )
+                ? () => setState(() => _showFontSettings = !_showFontSettings)
                 : null,
           ),
           const Spacer(),
@@ -1634,6 +1647,68 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
               borderRadius: BorderRadius.circular(4),
               borderSide: const BorderSide(color: Colors.blue)),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFontSettingsPanel(double width) {
+    final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
+    return Container(
+      width: width,
+      decoration: BoxDecoration(
+        color: theme.surface,
+        border: Border(left: BorderSide(color: theme.border)),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: theme.border)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.text_fields, color: theme.textPrimary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Font Settings',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: theme.textPrimary,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close, color: theme.textSecondary, size: 18),
+                  onPressed: () => setState(() => _showFontSettings = false),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: ThemedFontSettingsControls(
+                config: _fontConfig ?? SrtFontConfig(),
+                onConfigChanged: (config) {
+                  setState(() => _fontConfig = config);
+                  if (widget.projectId != null) {
+                    config.saveForProject(widget.projectId!);
+                  }
+                },
+                theme: theme,
+                showPreview: false,
+                spacing: 16,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

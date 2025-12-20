@@ -308,6 +308,71 @@ class _ThemedFontSettingsControlsState
           ),
         ],
 
+        // Background Settings
+        SizedBox(height: spacing),
+        _buildLabel('Background Padding: ${widget.config.bgPadding.toInt()}'),
+        const SizedBox(height: 8),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: const Color(0xFF2563EB),
+            inactiveTrackColor: theme.border,
+            thumbColor: const Color(0xFF2563EB),
+            overlayColor: const Color(0xFF2563EB).withAlpha(51),
+          ),
+          child: Slider(
+            value: widget.config.bgPadding,
+            min: 0,
+            max: 20,
+            divisions: 20,
+            onChanged: (value) {
+              widget.onConfigChanged(widget.config.copyWith(bgPadding: value));
+            },
+          ),
+        ),
+        SizedBox(height: spacing),
+        _buildLabel(
+            'Background Corner Radius: ${widget.config.bgCornerRadius.toInt()}'),
+        const SizedBox(height: 8),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: const Color(0xFF2563EB),
+            inactiveTrackColor: theme.border,
+            thumbColor: const Color(0xFF2563EB),
+            overlayColor: const Color(0xFF2563EB).withAlpha(51),
+          ),
+          child: Slider(
+            value: widget.config.bgCornerRadius,
+            min: 0,
+            max: 20,
+            divisions: 20,
+            onChanged: (value) {
+              widget.onConfigChanged(
+                  widget.config.copyWith(bgCornerRadius: value));
+            },
+          ),
+        ),
+        SizedBox(height: spacing),
+        _buildLabel(
+            'Background Opacity: ${(widget.config.bgOpacity * 100).toInt()}%'),
+        const SizedBox(height: 8),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            activeTrackColor: const Color(0xFF2563EB),
+            inactiveTrackColor: theme.border,
+            thumbColor: const Color(0xFF2563EB),
+            overlayColor: const Color(0xFF2563EB).withAlpha(51),
+          ),
+          child: Slider(
+            value: widget.config.bgOpacity,
+            min: 0,
+            max: 1,
+            divisions: 100,
+            onChanged: (value) {
+              widget.onConfigChanged(widget.config.copyWith(bgOpacity: value));
+            },
+          ),
+        ),
+
         // Preview (optional)
         if (widget.showPreview) ...[
           SizedBox(height: spacing + 4),

@@ -93,6 +93,10 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
         let fontColorValue = fontConfig["fontColor"] as? Int ?? 0xFFFFFFFF
         let positionIndex = fontConfig["position"] as? Int ?? 2 // 0=top, 1=center, 2=bottom
         let marginPercent = fontConfig["marginPercent"] as? Double ?? 5.0
+        // Background settings
+        let bgPadding = fontConfig["bgPadding"] as? Double ?? 4.0
+        let bgCornerRadius = fontConfig["bgCornerRadius"] as? Double ?? 4.0
+        let bgOpacity = fontConfig["bgOpacity"] as? Double ?? 0.54
         
         // Scale font size relative to video height
         // In Flutter preview, the video is typically displayed at ~400px height
@@ -153,18 +157,18 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
                 context: nil
             ).size
             
-            // Padding similar to Flutter preview (horizontal: 16, vertical: 1)
+            // Padding - use settings from config
             let horizontalPadding: CGFloat = 16 * scaleFactor
-            let verticalPadding: CGFloat = 1 * scaleFactor
-            
+            let verticalPadding: CGFloat = CGFloat(bgPadding) * scaleFactor
+
             // Calculate line height and dimensions
             let singleLineHeight = font.ascender + abs(font.descender) + font.leading
             let numberOfLines = max(1, Int(ceil(textSize.height / singleLineHeight)))
             let contentHeight = max(textSize.height, singleLineHeight * CGFloat(numberOfLines))
-            
+
             let containerWidth = textSize.width + horizontalPadding * 2
-            let containerHeight = contentHeight + verticalPadding * 1
-            
+            let containerHeight = contentHeight + verticalPadding * 2
+
             // Calculate Y position based on position setting
             // CALayer uses bottom-left origin (y=0 is bottom)
             let yPosition: CGFloat
@@ -176,7 +180,7 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
             default: // bottom
                 yPosition = marginPixels
             }
-            
+
             // Create container layer for background
             let textContainerLayer = CALayer()
             textContainerLayer.frame = CGRect(
@@ -185,8 +189,8 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
                 width: containerWidth,
                 height: containerHeight
             )
-            textContainerLayer.backgroundColor = CGColor(red: 0, green: 0, blue: 0, alpha: 0.54)
-            textContainerLayer.cornerRadius = 4.0 * scaleFactor // Match Flutter preview radius
+            textContainerLayer.backgroundColor = CGColor(red: 0, green: 0, blue: 0, alpha: CGFloat(bgOpacity))
+            textContainerLayer.cornerRadius = CGFloat(bgCornerRadius) * scaleFactor
             
             // Create text layer
             let textLayer = CATextLayer()

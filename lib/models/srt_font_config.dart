@@ -12,6 +12,10 @@ class SrtFontConfig {
   Color fontColor;
   SubtitlePosition position;
   double marginPercent; // Margin from edge as percentage of video height (0-50)
+  // Background settings
+  double bgPadding; // Vertical padding in points (0-20)
+  double bgCornerRadius; // Corner radius in points (0-20)
+  double bgOpacity; // Background opacity (0.0-1.0)
 
   SrtFontConfig({
     this.fontFamily = 'System Default',
@@ -20,6 +24,9 @@ class SrtFontConfig {
     this.fontColor = Colors.white,
     this.position = SubtitlePosition.bottom,
     this.marginPercent = 5.0, // 5% from edge by default
+    this.bgPadding = 4.0,
+    this.bgCornerRadius = 4.0,
+    this.bgOpacity = 0.54,
   });
 
   static const List<String> availableFonts = [
@@ -54,6 +61,9 @@ class SrtFontConfig {
         'fontColor': fontColor.value,
         'position': position.index,
         'marginPercent': marginPercent,
+        'bgPadding': bgPadding,
+        'bgCornerRadius': bgCornerRadius,
+        'bgOpacity': bgOpacity,
       };
 
   factory SrtFontConfig.fromJson(Map<String, dynamic> json) {
@@ -65,6 +75,9 @@ class SrtFontConfig {
       position: SubtitlePosition.values[json['position'] ?? 2],
       marginPercent:
           (json['marginPercent'] ?? json['marginPixels'] ?? 5.0).toDouble(),
+      bgPadding: (json['bgPadding'] ?? 4.0).toDouble(),
+      bgCornerRadius: (json['bgCornerRadius'] ?? 4.0).toDouble(),
+      bgOpacity: (json['bgOpacity'] ?? 0.54).toDouble(),
     );
   }
 
@@ -126,6 +139,9 @@ class SrtFontConfig {
     Color? fontColor,
     SubtitlePosition? position,
     double? marginPercent,
+    double? bgPadding,
+    double? bgCornerRadius,
+    double? bgOpacity,
   }) {
     return SrtFontConfig(
       fontFamily: fontFamily ?? this.fontFamily,
@@ -134,6 +150,9 @@ class SrtFontConfig {
       fontColor: fontColor ?? this.fontColor,
       position: position ?? this.position,
       marginPercent: marginPercent ?? this.marginPercent,
+      bgPadding: bgPadding ?? this.bgPadding,
+      bgCornerRadius: bgCornerRadius ?? this.bgCornerRadius,
+      bgOpacity: bgOpacity ?? this.bgOpacity,
     );
   }
 }

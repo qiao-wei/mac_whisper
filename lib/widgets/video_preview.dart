@@ -166,11 +166,18 @@ class _VideoPreviewState extends State<VideoPreview> {
                                     final text = _getCurrentSubtitle();
                                     if (text == null) return const SizedBox();
                                     return Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 8),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical:
+                                              widget.fontConfig?.bgPadding ??
+                                                  4),
                                       decoration: BoxDecoration(
-                                        color: Colors.black54,
-                                        borderRadius: BorderRadius.circular(4),
+                                        color: Colors.black.withOpacity(
+                                            widget.fontConfig?.bgOpacity ??
+                                                0.54),
+                                        borderRadius: BorderRadius.circular(
+                                            widget.fontConfig?.bgCornerRadius ??
+                                                4),
                                       ),
                                       child: Text(
                                         text,
