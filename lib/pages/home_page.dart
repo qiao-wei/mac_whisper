@@ -1069,7 +1069,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     return Dialog(
       backgroundColor: theme.settingsDialog,
       child: Container(
-        width: 850,
+        width: 900,
         constraints: const BoxConstraints(maxHeight: 700),
         child: Row(
           children: [
