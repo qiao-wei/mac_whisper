@@ -530,11 +530,16 @@ class _FullscreenVideoPlayerState extends State<_FullscreenVideoPlayer> {
                               final text = _getCurrentSubtitle();
                               if (text == null) return const SizedBox();
                               return Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 12),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: widget.fontConfig?.bgPadding ?? 12),
                                 decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: (widget.fontConfig?.bgColor ??
+                                          Colors.black)
+                                      .withOpacity(
+                                          widget.fontConfig?.bgOpacity ?? 0.54),
+                                  borderRadius: BorderRadius.circular(
+                                      widget.fontConfig?.bgCornerRadius ?? 8),
                                 ),
                                 child: Text(
                                   text,
