@@ -1213,7 +1213,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                     Icons.merge_type,
                     'Video Merging',
                     'Seamlessly merge your finished subtitles back into the original video.',
-                    false,
+                    true,
                     theme),
                 _buildFeatureCard(
                     Icons.link,
