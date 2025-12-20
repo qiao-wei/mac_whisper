@@ -1921,11 +1921,15 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     return buffer.toString();
   }
 
-  void _showExportDialog() {
+  void _showExportDialog() async {
     final theme = MacWhisperApp.of(context)?.theme ?? const AppTheme();
     String selectedFormat = 'SRT';
-    bool mergeToVideo = false;
+    // Load saved merge status for this project
+    final savedMerge =
+        await _db.getConfig('merge_to_video_${widget.projectId}');
+    bool mergeToVideo = savedMerge == 'true';
 
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -2136,24 +2140,35 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
                       // ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: mergeToVideo,
-                              onChanged: (v) =>
-                                  setState(() => mergeToVideo = v ?? false),
-                              fillColor: WidgetStateProperty.resolveWith(
-                                  (states) =>
-                                      states.contains(WidgetState.selected)
-                                          ? const Color(0xFF2563EB)
-                                          : Colors.transparent),
-                              side: BorderSide(color: theme.border, width: 2),
-                            ),
-                            const SizedBox(width: 8),
-                            Text('Merge subtitles into original video',
-                                style: TextStyle(
-                                    fontSize: 14, color: theme.textPrimary)),
-                          ],
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => mergeToVideo = !mergeToVideo);
+                            _db.setConfig('merge_to_video_${widget.projectId}',
+                                mergeToVideo.toString());
+                          },
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: mergeToVideo,
+                                onChanged: (v) {
+                                  setState(() => mergeToVideo = v ?? false);
+                                  _db.setConfig(
+                                      'merge_to_video_${widget.projectId}',
+                                      mergeToVideo.toString());
+                                },
+                                fillColor: WidgetStateProperty.resolveWith(
+                                    (states) =>
+                                        states.contains(WidgetState.selected)
+                                            ? const Color(0xFF2563EB)
+                                            : Colors.transparent),
+                                side: BorderSide(color: theme.border, width: 2),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('Merge subtitles into original video',
+                                  style: TextStyle(
+                                      fontSize: 14, color: theme.textPrimary)),
+                            ],
+                          ),
                         ),
                       ),
                       Padding(
