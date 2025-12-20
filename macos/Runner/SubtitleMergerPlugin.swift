@@ -223,8 +223,11 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
             let animation = CAKeyframeAnimation(keyPath: "opacity")
             let videoDuration = CMTimeGetSeconds(asset.duration)
 
+            // Add 100ms delay before showing subtitle
+            let adjustedStartTime = startTime + 0.1
+
             // Calculate normalized times
-            let startNormalized = startTime / videoDuration
+            let startNormalized = adjustedStartTime / videoDuration
             let endNormalized = endTime / videoDuration
 
             // Simple keyframes: invisible before start, visible during, invisible after
