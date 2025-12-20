@@ -162,18 +162,17 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
                 attributes: [.font: font],
                 context: nil
             ).size
-            
+
+            // Apply line height multiplier to match Flutter's default behavior (1.2x)
+            let lineHeightMultiplier: CGFloat = 1.2
+            let adjustedTextHeight = textSize.height * lineHeightMultiplier
+
             // Padding - use settings from config
             let horizontalPadding: CGFloat = 16 * scaleFactor
             let verticalPadding: CGFloat = CGFloat(bgPadding) * scaleFactor
 
-            // Calculate line height and dimensions
-            let singleLineHeight = font.ascender + abs(font.descender) + font.leading
-            let numberOfLines = max(1, Int(ceil(textSize.height / singleLineHeight)))
-            let contentHeight = max(textSize.height, singleLineHeight * CGFloat(numberOfLines))
-
             let containerWidth = textSize.width + horizontalPadding * 2
-            let containerHeight = contentHeight + verticalPadding * 2
+            let containerHeight = adjustedTextHeight + verticalPadding * 2
 
             // Calculate Y position based on position setting
             // CALayer uses bottom-left origin (y=0 is bottom)
@@ -208,8 +207,8 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
             textLayer.contentsScale = 2.0
             textLayer.isWrapped = true
             
-            // Center text in container - account for contentHeight vs textSize.height difference
-            let textY = verticalPadding + (contentHeight - textSize.height) / 2
+            // Position text in container - center vertically in the adjusted height
+            let textY = verticalPadding + (adjustedTextHeight - textSize.height) / 2
             textLayer.frame = CGRect(
                 x: horizontalPadding,
                 y: textY,
@@ -264,7 +263,7 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
             animation.duration = videoDuration
             animation.beginTime = AVCoreAnimationBeginTimeAtZero
             animation.isRemovedOnCompletion = false
-            animation.fillMode = .both
+            animation.fillMode = .forwards
             
             // Apply animation to container layer
             textContainerLayer.add(animation, forKey: "opacity")
