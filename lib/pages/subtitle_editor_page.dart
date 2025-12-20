@@ -1814,21 +1814,37 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
     if (outputPath == null) return;
 
     // Show progress indicator
+    double progress = 0.0;
+    late void Function(void Function()) updateProgress;
+
     if (mounted) {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: MacWhisperApp.of(context)?.theme.settingsDialog,
-          content: Row(
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(width: 20),
-              Text('Merging subtitles...',
-                  style: TextStyle(
-                      color: MacWhisperApp.of(context)?.theme.textPrimary)),
-            ],
-          ),
+        builder: (ctx) => StatefulBuilder(
+          builder: (context, setState) {
+            updateProgress = setState;
+            return AlertDialog(
+              backgroundColor: MacWhisperApp.of(context)?.theme.settingsDialog,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: MacWhisperApp.of(context)?.theme.border,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Merging subtitles... ${(progress * 100).toInt()}%',
+                    style: TextStyle(
+                      color: MacWhisperApp.of(context)?.theme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       );
     }
@@ -1846,14 +1862,26 @@ class _SubtitleEditorPageState extends State<SubtitleEditorPage> {
       // Prepare font config
       final fontConfigData = _fontConfig?.toJson() ?? SrtFontConfig().toJson();
 
-      // Call native plugin
+      // Set up progress listener
       const channel = MethodChannel('com.macwhisper/subtitle_merger');
+      channel.setMethodCallHandler((call) async {
+        if (call.method == 'onProgress') {
+          final args = call.arguments as Map;
+          progress = args['progress'] as double;
+          updateProgress(() {});
+        }
+      });
+
+      // Call native plugin
       final result = await channel.invokeMethod('mergeSubtitles', {
         'videoPath': videoPath,
         'outputPath': outputPath,
         'subtitles': subtitlesData,
         'fontConfig': fontConfigData,
       });
+
+      // Clear handler
+      channel.setMethodCallHandler(null);
 
       // Close progress dialog
       if (mounted) Navigator.of(context).pop();

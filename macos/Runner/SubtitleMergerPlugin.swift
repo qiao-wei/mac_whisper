@@ -7,13 +7,16 @@ import CoreText
 class SubtitleMergerPlugin: NSObject, FlutterPlugin {
     // Keep strong reference to export session to prevent deallocation during async export
     private var currentExportSession: AVAssetExportSession?
-    
+    private var channel: FlutterMethodChannel?
+    private var progressTimer: Timer?
+
     static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(
             name: "com.macwhisper/subtitle_merger",
             binaryMessenger: registrar.messenger
         )
         let instance = SubtitleMergerPlugin()
+        instance.channel = channel
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
@@ -306,13 +309,17 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
         exportSession.videoComposition = videoComposition
         
         exportSession.exportAsynchronously { [self] in
+            // Stop progress timer
+            self.progressTimer?.invalidate()
+            self.progressTimer = nil
+
             DispatchQueue.main.async { [self] in
                 let status = self.currentExportSession?.status ?? .unknown
                 let error = self.currentExportSession?.error
-                
+
                 // Clear the reference after completion
                 defer { self.currentExportSession = nil }
-                
+
                 switch status {
                 case .completed:
                     result(outputPath)
@@ -323,6 +330,15 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
                 default:
                     result(FlutterError(code: "EXPORT_UNKNOWN", message: "Unknown export status", details: nil))
                 }
+            }
+        }
+
+        // Start progress monitoring
+        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            guard let self = self, let session = self.currentExportSession else { return }
+            let progress = Double(session.progress)
+            DispatchQueue.main.async {
+                self.channel?.invokeMethod("onProgress", arguments: ["progress": progress])
             }
         }
     }
