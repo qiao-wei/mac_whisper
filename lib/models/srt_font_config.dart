@@ -13,6 +13,7 @@ class SrtFontConfig {
   SubtitlePosition position;
   double marginPercent; // Margin from edge as percentage of video height (0-50)
   // Background settings
+  Color bgColor; // Background color
   double bgPadding; // Vertical padding in points (0-20)
   double bgCornerRadius; // Corner radius in points (0-20)
   double bgOpacity; // Background opacity (0.0-1.0)
@@ -24,6 +25,7 @@ class SrtFontConfig {
     this.fontColor = Colors.white,
     this.position = SubtitlePosition.bottom,
     this.marginPercent = 5.0, // 5% from edge by default
+    this.bgColor = Colors.black,
     this.bgPadding = 4.0,
     this.bgCornerRadius = 4.0,
     this.bgOpacity = 0.54,
@@ -61,6 +63,7 @@ class SrtFontConfig {
         'fontColor': fontColor.value,
         'position': position.index,
         'marginPercent': marginPercent,
+        'bgColor': bgColor.value,
         'bgPadding': bgPadding,
         'bgCornerRadius': bgCornerRadius,
         'bgOpacity': bgOpacity,
@@ -75,6 +78,7 @@ class SrtFontConfig {
       position: SubtitlePosition.values[json['position'] ?? 2],
       marginPercent:
           (json['marginPercent'] ?? json['marginPixels'] ?? 5.0).toDouble(),
+      bgColor: Color(json['bgColor'] ?? Colors.black.value),
       bgPadding: (json['bgPadding'] ?? 4.0).toDouble(),
       bgCornerRadius: (json['bgCornerRadius'] ?? 4.0).toDouble(),
       bgOpacity: (json['bgOpacity'] ?? 0.54).toDouble(),
@@ -139,6 +143,7 @@ class SrtFontConfig {
     Color? fontColor,
     SubtitlePosition? position,
     double? marginPercent,
+    Color? bgColor,
     double? bgPadding,
     double? bgCornerRadius,
     double? bgOpacity,
@@ -150,6 +155,7 @@ class SrtFontConfig {
       fontColor: fontColor ?? this.fontColor,
       position: position ?? this.position,
       marginPercent: marginPercent ?? this.marginPercent,
+      bgColor: bgColor ?? this.bgColor,
       bgPadding: bgPadding ?? this.bgPadding,
       bgCornerRadius: bgCornerRadius ?? this.bgCornerRadius,
       bgOpacity: bgOpacity ?? this.bgOpacity,

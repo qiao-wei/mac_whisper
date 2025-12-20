@@ -172,9 +172,11 @@ class _VideoPreviewState extends State<VideoPreview> {
                                               widget.fontConfig?.bgPadding ??
                                                   4),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(
-                                            widget.fontConfig?.bgOpacity ??
-                                                0.54),
+                                        color: (widget.fontConfig?.bgColor ??
+                                                Colors.black)
+                                            .withOpacity(
+                                                widget.fontConfig?.bgOpacity ??
+                                                    0.54),
                                         borderRadius: BorderRadius.circular(
                                             widget.fontConfig?.bgCornerRadius ??
                                                 4),

@@ -94,9 +94,15 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
         let positionIndex = fontConfig["position"] as? Int ?? 2 // 0=top, 1=center, 2=bottom
         let marginPercent = fontConfig["marginPercent"] as? Double ?? 5.0
         // Background settings
+        let bgColorValue = fontConfig["bgColor"] as? Int ?? 0xFF000000
         let bgPadding = fontConfig["bgPadding"] as? Double ?? 4.0
         let bgCornerRadius = fontConfig["bgCornerRadius"] as? Double ?? 4.0
         let bgOpacity = fontConfig["bgOpacity"] as? Double ?? 0.54
+
+        // Convert background color (ARGB format)
+        let bgRed = CGFloat((bgColorValue >> 16) & 0xFF) / 255.0
+        let bgGreen = CGFloat((bgColorValue >> 8) & 0xFF) / 255.0
+        let bgBlue = CGFloat(bgColorValue & 0xFF) / 255.0
         
         // Scale font size relative to video height
         // In Flutter preview, the video is typically displayed at ~400px height
@@ -189,7 +195,7 @@ class SubtitleMergerPlugin: NSObject, FlutterPlugin {
                 width: containerWidth,
                 height: containerHeight
             )
-            textContainerLayer.backgroundColor = CGColor(red: 0, green: 0, blue: 0, alpha: CGFloat(bgOpacity))
+            textContainerLayer.backgroundColor = CGColor(red: bgRed, green: bgGreen, blue: bgBlue, alpha: CGFloat(bgOpacity))
             textContainerLayer.cornerRadius = CGFloat(bgCornerRadius) * scaleFactor
             
             // Create text layer

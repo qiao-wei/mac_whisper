@@ -44,7 +44,19 @@ class _ThemedFontSettingsControlsState
   }
 
   void _showColorPicker() {
-    Color pickerColor = widget.config.fontColor;
+    _showColorPickerFor(widget.config.fontColor, (color) {
+      widget.onConfigChanged(widget.config.copyWith(fontColor: color));
+    });
+  }
+
+  void _showBgColorPicker() {
+    _showColorPickerFor(widget.config.bgColor, (color) {
+      widget.onConfigChanged(widget.config.copyWith(bgColor: color));
+    });
+  }
+
+  void _showColorPickerFor(Color initialColor, ValueChanged<Color> onApply) {
+    Color pickerColor = initialColor;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -72,8 +84,7 @@ class _ThemedFontSettingsControlsState
           ),
           ElevatedButton(
             onPressed: () {
-              widget.onConfigChanged(
-                  widget.config.copyWith(fontColor: pickerColor));
+              onApply(pickerColor);
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
@@ -322,6 +333,39 @@ class _ThemedFontSettingsControlsState
 
         // Background Settings
         SizedBox(height: spacing),
+        _buildLabel('Background Color'),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            GestureDetector(
+              onTap: _showBgColorPicker,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: widget.config.bgColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: theme.border, width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _showBgColorPicker,
+                icon: const Icon(Icons.palette, size: 18),
+                label: const Text('Choose Color'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.textPrimary,
+                  side: BorderSide(color: theme.border),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: spacing),
         _buildLabel('Background Padding: ${widget.config.bgPadding.toInt()}'),
         const SizedBox(height: 8),
         FocusScope(
@@ -411,19 +455,30 @@ class _ThemedFontSettingsControlsState
               border: Border.all(color: theme.border),
             ),
             child: Center(
-              child: Text(
-                'Sample Subtitle Text\n示例字幕文本',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: widget.config.fontFamily == 'System Default'
-                      ? null
-                      : widget.config.fontFamily,
-                  fontSize: widget.config.fontSize,
-                  fontWeight: widget.config.isBold
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                  color: widget.config.fontColor,
-                  height: 1.5,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: widget.config.bgPadding,
+                ),
+                decoration: BoxDecoration(
+                  color: widget.config.bgColor.withOpacity(widget.config.bgOpacity),
+                  borderRadius:
+                      BorderRadius.circular(widget.config.bgCornerRadius),
+                ),
+                child: Text(
+                  'Sample Subtitle Text\n示例字幕文本',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: widget.config.fontFamily == 'System Default'
+                        ? null
+                        : widget.config.fontFamily,
+                    fontSize: widget.config.fontSize,
+                    fontWeight: widget.config.isBold
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: widget.config.fontColor,
+                    height: 1.5,
+                  ),
                 ),
               ),
             ),
